@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   NavigationContainer,
   DefaultTheme,
@@ -9,7 +8,10 @@ import LoginScreen from '../screens/LoginScreen';
 import HomeScreen from '../screens/HomeScreen';
 import OrderScreen from '../screens/OrderScreen';
 import PickupScreen from '../screens/PickupScreen';
+import ValidatePickupScreen from '../screens/ValidatePickupScreen';
+import PickupValidatedScreen from '../screens/PickupValidatedScreen';
 import DeliveryScreen from '../screens/DeliveryScreen';
+import ValidateDeliveryScreen from '../screens/ValidateDeliveryScreen';
 import SuccessScreen from '../screens/SuccessScreen';
 import type { RootStackParamList } from '../types/navigation';
 
@@ -43,32 +45,39 @@ export default function AppNavigator() {
         <Stack.Screen
           name="Login"
           component={LoginScreen}
-          options={{
-            headerShown: false,
-          }}
+          options={{ headerShown: false }}
         />
 
         <Stack.Screen
           name="Home"
           component={HomeScreen}
-          options={{
-            headerShown: false,
-          }}
+          options={{ headerShown: false }}
         />
 
         <Stack.Screen
           name="Order"
           component={OrderScreen}
-          options={{
-            title: 'Detalhes do pedido',
-          }}
+          options={{ title: 'Detalhes do pedido' }}
         />
 
         <Stack.Screen
           name="Pickup"
           component={PickupScreen}
+          options={{ title: 'Retirada' }}
+        />
+
+        <Stack.Screen
+          name="ValidatePickup"
+          component={ValidatePickupScreen}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="PickupValidated"
+          component={PickupValidatedScreen}
           options={{
-            title: 'Retirada',
+            headerShown: false,
+            gestureEnabled: false,
           }}
         />
 
@@ -79,6 +88,12 @@ export default function AppNavigator() {
             title: 'Entrega',
             headerBackVisible: false,
           }}
+        />
+
+        <Stack.Screen
+          name="ValidateDelivery"
+          component={ValidateDeliveryScreen}
+          options={{ headerShown: false }}
         />
 
         <Stack.Screen
