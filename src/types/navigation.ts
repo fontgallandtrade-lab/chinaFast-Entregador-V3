@@ -7,6 +7,9 @@ export type RootStackParamList = {
   Pickup: {
     orderId: number;
   };
+  ValidatePickup: {
+    orderId: number;
+  };
   Delivery: {
     orderId: number;
   };
