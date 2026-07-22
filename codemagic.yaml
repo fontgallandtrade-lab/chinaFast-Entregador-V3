@@ -1,6 +1,6 @@
 workflows:
-  android-debug:
-    name: ChinaFast Teste Android
+  android-release:
+    name: ChinaFast Android Release
 
     max_build_duration: 60
 
@@ -13,18 +13,23 @@ workflows:
         script: |
           npm ci
 
-      - name: Verificar projeto Expo
+      - name: Verificar projeto
         script: |
           npx expo-doctor
 
-      - name: Gerar projeto Android
+      - name: Gerar Android
         script: |
           npx expo prebuild --platform android --clean
 
-      - name: Gerar APK Debug
+      - name: Build Release
         script: |
           cd android
-          ./gradlew assembleDebug
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon
+
+      - name: Conferir APK
+        script: |
+          find android/app/build/outputs -type f -name "*.apk" -print
 
     artifacts:
-      - android/app/build/outputs/apk/debug/app-debug.apk
+      - android/app/build/outputs/apk/release/*.apk
