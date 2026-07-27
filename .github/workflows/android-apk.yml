@@ -1,0 +1,62 @@
+name: Gerar APK ChinaFast
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - main
+
+jobs:
+  build-android:
+    name: Build Android Release
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 60
+
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v6
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Configurar Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Verificar TypeScript
+        run: npx tsc --noEmit
+
+      - name: Verificar projeto Expo
+        run: npx expo-doctor
+
+      - name: Gerar projeto Android
+        run: npx expo prebuild --platform android --clean
+
+      - name: Dar permissão ao Gradle
+        run: chmod +x android/gradlew
+
+      - name: Gerar APK release
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Localizar APK
+        run: find android/app/build/outputs -type f -name "*.apk" -print
+
+      - name: Publicar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: chinafast-entregador-apk
+          path: android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+          retention-days: 7
