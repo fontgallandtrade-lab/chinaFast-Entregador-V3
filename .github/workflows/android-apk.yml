@@ -29,7 +29,6 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-          cache: gradle
 
       - name: Instalar dependências
         run: npm ci
@@ -41,7 +40,9 @@ jobs:
         run: npx expo-doctor
 
       - name: Gerar projeto Android
-        run: npx expo prebuild --platform android --clean
+        env:
+          EXPO_NO_GIT_STATUS: 1
+        run: npx expo prebuild --platform android --clean --no-install
 
       - name: Dar permissão ao Gradle
         run: chmod +x android/gradlew
