@@ -27,7 +27,7 @@ type Props = {
   ) => Promise<void>;
 };
 
-const CODE_LENGTH = 5;
+const CODE_LENGTH = 6;
 
 export default function CodeValidationLayout({
   title,
@@ -172,7 +172,7 @@ export default function CodeValidationLayout({
         </Text>
 
         <Text style={styles.securityText}>
-          O código possui 5 números e deve ser
+          O código possui 6 números e deve ser
           informado pela pessoa responsável.
         </Text>
       </TouchableOpacity>
