@@ -163,6 +163,37 @@ export default function PickupScreen({
     }
   }
 
+  function openPickupRoute() {
+    if (!delivery) {
+      return;
+    }
+
+    const destination = [
+      delivery.pickup_street,
+      delivery.pickup_number,
+      delivery.pickup_neighborhood,
+      delivery.pickup_city,
+      delivery.pickup_state,
+    ]
+      .filter(Boolean)
+      .join(', ');
+
+    const encodedDestination =
+      encodeURIComponent(destination);
+
+    const mapsUrl =
+      `https://www.google.com/maps/dir/?api=1` +
+      `&destination=${encodedDestination}` +
+      `&travelmode=driving`;
+
+    Linking.openURL(mapsUrl).catch(() => {
+      Alert.alert(
+        'Não foi possível abrir o mapa',
+        'Verifique se existe um aplicativo de mapas instalado.',
+      );
+    });
+  }
+
   function openPhone() {
     const phone =
       delivery?.pickup_contact_phone;
@@ -224,6 +255,16 @@ export default function PickupScreen({
           <Text style={styles.address}>
             {formatAddress(delivery)}
           </Text>
+
+          <TouchableOpacity
+            style={styles.mapsButton}
+            activeOpacity={0.85}
+            onPress={openPickupRoute}
+          >
+            <Text style={styles.mapsButtonText}>
+              ABRIR ROTA NO GOOGLE MAPS
+            </Text>
+          </TouchableOpacity>
 
           {delivery.pickup_contact_phone ? (
             <TouchableOpacity
@@ -342,13 +383,28 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
 
+  mapsButton: {
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: '#EAF2FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+  },
+
+  mapsButtonText: {
+    color: '#1769AA',
+    fontWeight: '900',
+    fontSize: 13,
+  },
+
   phoneButton: {
     height: 48,
     borderRadius: 14,
     backgroundColor: '#FFF0E5',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 18,
+    marginTop: 10,
   },
 
   phoneText: {
