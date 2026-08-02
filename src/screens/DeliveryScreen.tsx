@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
-  SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -15,6 +14,11 @@ import {
 } from 'react-native';
 
 import { useFocusEffect } from '@react-navigation/native';
+
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 
 import type {
   NativeStackScreenProps,
@@ -58,6 +62,8 @@ export default function DeliveryScreen({
   navigation,
 }: Props) {
   const { orderId } = route.params;
+
+  const insets = useSafeAreaInsets();
 
   const [delivery, setDelivery] =
     useState<Delivery | null>(null);
@@ -201,7 +207,17 @@ export default function DeliveryScreen({
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
+      <View
+        style={[
+          styles.content,
+          {
+            paddingBottom: Math.max(
+              insets.bottom + 24,
+              48,
+            ),
+          },
+        ]}
+      >
         <Text style={styles.title}>
           Realizar entrega
         </Text>
@@ -374,6 +390,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 'auto',
+    marginBottom: 8,
   },
 
   buttonText: {
