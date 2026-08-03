@@ -17,10 +17,20 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.chamabebidas.chinafasttest"
+      "package": "com.chamabebidas.chinafasttest",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "color": "#FF6A00",
+          "defaultChannel": "novas-corridas"
+        }
+      ]
+    ]
   }
 }
