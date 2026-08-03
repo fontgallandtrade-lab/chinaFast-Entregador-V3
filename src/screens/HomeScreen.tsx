@@ -29,6 +29,7 @@ import {
 
 import { authService } from '../services/auth';
 import { deliveryService } from '../services/delivery';
+import { pushService } from '../services/push';
 
 import {
   connectDriverSocket,
@@ -195,6 +196,23 @@ export default function HomeScreen({
     isOnline,
     loadDeliveries,
   ]);
+
+  useEffect(() => {
+    if (!user?.driver_id) {
+      return;
+    }
+
+    pushService
+      .registerPushToken()
+      .catch((pushError) => {
+        console.log(
+          '[push] Falha ao registrar token:',
+          pushError instanceof Error
+            ? pushError.message
+            : pushError,
+        );
+      });
+  }, [user?.driver_id]);
 
   useEffect(() => {
     const driverId = user?.driver_id;
