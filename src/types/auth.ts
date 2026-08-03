@@ -6,6 +6,7 @@ export type UserRole =
 
 export type AuthUser = {
   id: number;
+  driver_id?: number;
   name: string;
   email: string;
   phone?: string | null;

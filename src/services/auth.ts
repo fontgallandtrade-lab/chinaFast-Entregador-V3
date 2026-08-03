@@ -40,6 +40,12 @@ async function login(
     );
   }
 
+  if (!response.user.driver_id) {
+    throw new Error(
+      'O cadastro do entregador não possui identificação válida.',
+    );
+  }
+
   await saveSession(
     response.token,
     response.user,

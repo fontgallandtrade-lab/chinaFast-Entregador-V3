@@ -30,6 +30,13 @@ import {
 import { authService } from '../services/auth';
 import { deliveryService } from '../services/delivery';
 
+import {
+  connectDriverSocket,
+  disconnectDriverSocket,
+  setDriverOffline,
+  setDriverOnline,
+} from '../services/socket';
+
 import type { AuthUser } from '../types/auth';
 import type { Delivery } from '../types/delivery';
 
@@ -189,6 +196,65 @@ export default function HomeScreen({
     isOnline,
     loadDeliveries,
   ]);
+
+  useEffect(() => {
+    const driverId = user?.driver_id;
+
+    if (!driverId) {
+      return;
+    }
+
+    if (!isOnline) {
+      setDriverOffline(driverId);
+      return;
+    }
+
+    const socket =
+      connectDriverSocket(driverId);
+
+    function refreshAvailableDeliveries() {
+      loadDeliveries(false);
+    }
+
+    socket.on(
+      'delivery-offer-created',
+      refreshAvailableDeliveries,
+    );
+
+    socket.on(
+      'delivery-status-updated',
+      refreshAvailableDeliveries,
+    );
+
+    socket.on(
+      'connect',
+      () => {
+        setDriverOnline(driverId);
+      },
+    );
+
+    return () => {
+      socket.off(
+        'delivery-offer-created',
+        refreshAvailableDeliveries,
+      );
+
+      socket.off(
+        'delivery-status-updated',
+        refreshAvailableDeliveries,
+      );
+    };
+  }, [
+    user?.driver_id,
+    isOnline,
+    loadDeliveries,
+  ]);
+
+  useEffect(() => {
+    return () => {
+      disconnectDriverSocket();
+    };
+  }, []);
 
   async function handleRefresh() {
     setRefreshing(true);
