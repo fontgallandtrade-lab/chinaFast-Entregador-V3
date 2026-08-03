@@ -31,12 +31,16 @@ export type Delivery = {
   pickup_neighborhood?: string | null;
   pickup_city: string;
   pickup_state?: string | null;
+  pickup_latitude?: number | string | null;
+  pickup_longitude?: number | string | null;
 
   destination_street: string;
   destination_number?: string | null;
   destination_neighborhood?: string | null;
   destination_city: string;
   destination_state?: string | null;
+  destination_latitude?: number | string | null;
+  destination_longitude?: number | string | null;
 
   pickup_contact_name?: string | null;
   pickup_contact_phone?: string | null;

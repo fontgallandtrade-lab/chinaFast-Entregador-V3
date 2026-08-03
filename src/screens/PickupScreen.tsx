@@ -174,15 +174,23 @@ export default function PickupScreen({
       return;
     }
 
-    const destination = [
-      delivery.pickup_street,
-      delivery.pickup_number,
-      delivery.pickup_neighborhood,
-      delivery.pickup_city,
-      delivery.pickup_state,
-    ]
-      .filter(Boolean)
-      .join(', ');
+    const hasCoordinates =
+      delivery.pickup_latitude !== null &&
+      delivery.pickup_latitude !== undefined &&
+      delivery.pickup_longitude !== null &&
+      delivery.pickup_longitude !== undefined;
+
+    const destination = hasCoordinates
+      ? `${delivery.pickup_latitude},${delivery.pickup_longitude}`
+      : [
+          delivery.pickup_street,
+          delivery.pickup_number,
+          delivery.pickup_neighborhood,
+          delivery.pickup_city,
+          delivery.pickup_state,
+        ]
+          .filter(Boolean)
+          .join(', ');
 
     const encodedDestination =
       encodeURIComponent(destination);
