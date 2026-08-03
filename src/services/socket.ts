@@ -29,7 +29,6 @@ export function getSocket(): Socket {
   if (!socket) {
     socket = io(SOCKET_URL, {
       transports: [
-        'websocket',
         'polling',
       ],
       autoConnect: false,
@@ -68,6 +67,11 @@ export function connectDriverSocket(
   driverId: number,
 ): Socket {
   const currentSocket = getSocket();
+
+  console.log(
+    '[socket] iniciando conexão para driver:',
+    driverId,
+  );
 
   currentSocket.off('connect');
 
