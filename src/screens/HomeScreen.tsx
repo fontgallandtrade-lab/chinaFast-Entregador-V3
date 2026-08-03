@@ -34,7 +34,6 @@ import {
   connectDriverSocket,
   disconnectDriverSocket,
   setDriverOffline,
-  setDriverOnline,
 } from '../services/socket';
 
 import type { AuthUser } from '../types/auth';
@@ -224,13 +223,6 @@ export default function HomeScreen({
     socket.on(
       'delivery-status-updated',
       refreshAvailableDeliveries,
-    );
-
-    socket.on(
-      'connect',
-      () => {
-        setDriverOnline(driverId);
-      },
     );
 
     return () => {
