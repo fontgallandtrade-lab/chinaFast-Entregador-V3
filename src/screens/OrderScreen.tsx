@@ -21,6 +21,14 @@ import {
   deliveryService,
 } from '../services/delivery';
 
+import {
+  authService,
+} from '../services/auth';
+
+import {
+  startDriverLocationTracking,
+} from '../services/location';
+
 import type {
   RootStackParamList,
 } from '../types/navigation';
@@ -108,6 +116,39 @@ export default function OrderScreen({
       await deliveryService.accept(
         delivery.id,
       );
+
+      const session =
+        await authService.getSession();
+
+      const driverId =
+        session?.user.driver_id;
+
+      if (!driverId) {
+        throw new Error(
+          'Não foi possível identificar o entregador para iniciar o rastreamento.',
+        );
+      }
+
+      try {
+        await startDriverLocationTracking({
+          driverId,
+          deliveryId: delivery.id,
+        });
+      } catch (locationError) {
+        console.log(
+          '[location] Não foi possível iniciar o rastreamento:',
+          locationError instanceof Error
+            ? locationError.message
+            : locationError,
+        );
+
+        Alert.alert(
+          'Localização necessária',
+          locationError instanceof Error
+            ? locationError.message
+            : 'Ative a localização para compartilhar sua posição durante a entrega.',
+        );
+      }
 
       navigation.replace('Pickup', {
         orderId: delivery.id,
