@@ -11,6 +11,10 @@ import {
   deliveryService,
 } from '../services/delivery';
 
+import {
+  stopDriverLocationTracking,
+} from '../services/location';
+
 import type {
   RootStackParamList,
 } from '../types/navigation';
@@ -33,6 +37,8 @@ export default function ValidateDeliveryScreen({
       orderId,
       code,
     );
+
+    await stopDriverLocationTracking();
 
     navigation.replace(
       'Success',

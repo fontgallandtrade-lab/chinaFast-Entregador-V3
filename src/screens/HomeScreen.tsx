@@ -32,6 +32,11 @@ import { deliveryService } from '../services/delivery';
 import { pushService } from '../services/push';
 
 import {
+  startDriverLocationTracking,
+  stopDriverLocationTracking,
+} from '../services/location';
+
+import {
   connectDriverSocket,
   disconnectDriverSocket,
   setDriverOffline,
@@ -115,6 +120,53 @@ export default function HomeScreen({
       }
 
       setUser(session.user);
+
+      const driverId =
+        session.user.driver_id;
+
+      if (!driverId) {
+        return;
+      }
+
+      try {
+        const myDeliveries =
+          await deliveryService.getMine();
+
+        const activeDelivery =
+          myDeliveries.find(delivery =>
+            [
+              'accepted',
+              'driver_going_to_pickup',
+              'arrived_at_pickup',
+              'picked_up',
+              'in_transit',
+              'arrived_at_destination',
+            ].includes(delivery.status),
+          );
+
+        if (activeDelivery) {
+          connectDriverSocket(driverId);
+
+          await startDriverLocationTracking({
+            driverId,
+            deliveryId: activeDelivery.id,
+          });
+
+          console.log(
+            '[location] Rastreamento retomado para a entrega:',
+            activeDelivery.id,
+          );
+        } else {
+          await stopDriverLocationTracking();
+        }
+      } catch (trackingError) {
+        console.log(
+          '[location] Não foi possível retomar o rastreamento:',
+          trackingError instanceof Error
+            ? trackingError.message
+            : trackingError,
+        );
+      }
     },
     [navigation],
   );
