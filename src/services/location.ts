@@ -1,7 +1,7 @@
 import * as Location from 'expo-location';
 
 import {
-  getSocket,
+  connectDriverSocket,
 } from './socket';
 
 let locationSubscription:
