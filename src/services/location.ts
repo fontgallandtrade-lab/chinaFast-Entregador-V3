@@ -1,11 +1,17 @@
 import * as Location from 'expo-location';
 
+import type {
+  Socket,
+} from 'socket.io-client';
+
 import {
   connectDriverSocket,
 } from './socket';
 
 let locationSubscription:
   Location.LocationSubscription | null = null;
+
+let trackingSocket: Socket | null = null;
 
 let activeDeliveryId: number | null = null;
 let activeDriverId: number | null = null;
@@ -14,6 +20,64 @@ type StartTrackingParams = {
   driverId: number;
   deliveryId: number;
 };
+
+function emitLocation(
+  location: Location.LocationObject,
+): void {
+  if (
+    !trackingSocket ||
+    !activeDriverId ||
+    !activeDeliveryId
+  ) {
+    return;
+  }
+
+  const payload = {
+    driverId: activeDriverId,
+    deliveryId: activeDeliveryId,
+    latitude: location.coords.latitude,
+    longitude: location.coords.longitude,
+    accuracy: location.coords.accuracy,
+    heading: location.coords.heading,
+    speed: location.coords.speed,
+    timestamp: location.timestamp,
+  };
+
+  if (trackingSocket.connected) {
+    trackingSocket.emit(
+      'driver-location',
+      payload,
+    );
+
+    console.log(
+      '[location] Localização enviada:',
+      payload,
+    );
+
+    return;
+  }
+
+  console.log(
+    '[location] Socket conectando. Localização aguardando envio.',
+  );
+
+  trackingSocket.once(
+    'connect',
+    () => {
+      trackingSocket?.emit(
+        'driver-location',
+        payload,
+      );
+
+      console.log(
+        '[location] Localização enviada após conectar:',
+        payload,
+      );
+    },
+  );
+
+  trackingSocket.connect();
+}
 
 export async function startDriverLocationTracking({
   driverId,
@@ -27,11 +91,11 @@ export async function startDriverLocationTracking({
 
   await stopDriverLocationTracking();
 
-  const foregroundPermission =
+  const permission =
     await Location.requestForegroundPermissionsAsync();
 
   if (
-    foregroundPermission.status !==
+    permission.status !==
     Location.PermissionStatus.GRANTED
   ) {
     throw new Error(
@@ -51,62 +115,45 @@ export async function startDriverLocationTracking({
   activeDriverId = driverId;
   activeDeliveryId = deliveryId;
 
+  trackingSocket =
+    connectDriverSocket(driverId);
+
+  console.log(
+    '[location] Obtendo posição inicial...',
+  );
+
+  try {
+    const initialLocation =
+      await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+        mayShowUserSettingsDialog: true,
+      });
+
+    emitLocation(initialLocation);
+  } catch (error) {
+    console.log(
+      '[location] Falha ao obter posição inicial:',
+      error instanceof Error
+        ? error.message
+        : error,
+    );
+  }
+
   locationSubscription =
     await Location.watchPositionAsync(
       {
-        accuracy:
-          Location.Accuracy.High,
+        accuracy: Location.Accuracy.High,
         timeInterval: 5000,
-        distanceInterval: 10,
+        distanceInterval: 5,
+        mayShowUserSettingsDialog: true,
       },
       location => {
-        const latitude =
-          location.coords.latitude;
-
-        const longitude =
-          location.coords.longitude;
-
-        if (!activeDriverId) {
-          return;
-        }
-
-        const socket =
-          connectDriverSocket(activeDriverId);
-
-        if (!socket.connected) {
-          console.log(
-            '[location] Socket desconectado. Localização não enviada.',
-          );
-
-          return;
-        }
-
-        socket.emit(
-          'driver-location',
-          {
-            driverId: activeDriverId,
-            deliveryId: activeDeliveryId,
-            latitude,
-            longitude,
-            accuracy:
-              location.coords.accuracy,
-            heading:
-              location.coords.heading,
-            speed:
-              location.coords.speed,
-            timestamp:
-              location.timestamp,
-          },
-        );
-
+        emitLocation(location);
+      },
+      reason => {
         console.log(
-          '[location] Localização enviada:',
-          {
-            deliveryId:
-              activeDeliveryId,
-            latitude,
-            longitude,
-          },
+          '[location] Erro no monitoramento:',
+          reason,
         );
       },
     );
@@ -127,6 +174,7 @@ Promise<void> {
     locationSubscription = null;
   }
 
+  trackingSocket = null;
   activeDriverId = null;
   activeDeliveryId = null;
 
