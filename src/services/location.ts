@@ -66,7 +66,12 @@ export async function startDriverLocationTracking({
         const longitude =
           location.coords.longitude;
 
-        const socket = getSocket();
+        if (!activeDriverId) {
+          return;
+        }
+
+        const socket =
+          connectDriverSocket(activeDriverId);
 
         if (!socket.connected) {
           console.log(
