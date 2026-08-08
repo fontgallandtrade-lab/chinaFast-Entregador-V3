@@ -421,6 +421,28 @@ export default function HomeScreen({
           />
         </View>
 
+        <TouchableOpacity
+          activeOpacity={0.85}
+          style={styles.walletCard}
+          onPress={() =>
+            navigation.navigate('Wallet')
+          }
+        >
+          <View>
+            <Text style={styles.walletLabel}>
+              CARTEIRA DIGITAL
+            </Text>
+
+            <Text style={styles.walletTitle}>
+              Saldo, ganhos e saques
+            </Text>
+          </View>
+
+          <Text style={styles.walletArrow}>
+            ›
+          </Text>
+        </TouchableOpacity>
+
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>
             Corridas disponíveis
@@ -738,6 +760,36 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 20,
     fontWeight: '900',
+  },
+
+  walletCard: {
+    minHeight: 82,
+    borderRadius: 20,
+    paddingHorizontal: 18,
+    backgroundColor: '#171717',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+  },
+
+  walletLabel: {
+    color: '#FF8A38',
+    fontSize: 11,
+    fontWeight: '900',
+  },
+
+  walletTitle: {
+    color: '#FFFFFF',
+    fontSize: 17,
+    fontWeight: '900',
+    marginTop: 4,
+  },
+
+  walletArrow: {
+    color: '#FFFFFF',
+    fontSize: 34,
+    fontWeight: '300',
   },
 
   statusCard: {

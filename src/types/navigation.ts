@@ -3,6 +3,7 @@ import type { Delivery } from './delivery';
 export type RootStackParamList = {
   Login: undefined;
   Home: undefined;
+  Wallet: undefined;
   Order: {
     delivery: Delivery;
   };

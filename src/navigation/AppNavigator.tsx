@@ -6,6 +6,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import LoginScreen from '../screens/LoginScreen';
 import HomeScreen from '../screens/HomeScreen';
+import WalletScreen from '../screens/WalletScreen';
 import OrderScreen from '../screens/OrderScreen';
 import PickupScreen from '../screens/PickupScreen';
 import ValidatePickupScreen from '../screens/ValidatePickupScreen';
@@ -52,6 +53,12 @@ export default function AppNavigator() {
           name="Home"
           component={HomeScreen}
           options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="Wallet"
+          component={WalletScreen}
+          options={{ title: 'Carteira' }}
         />
 
         <Stack.Screen
