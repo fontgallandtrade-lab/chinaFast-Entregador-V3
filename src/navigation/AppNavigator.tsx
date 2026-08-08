@@ -2,9 +2,13 @@ import {
   NavigationContainer,
   DefaultTheme,
 } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
+import {
+  createNativeStackNavigator,
+} from '@react-navigation/native-stack';
 
 import LoginScreen from '../screens/LoginScreen';
+import RegisterDriverScreen from '../screens/RegisterDriverScreen';
 import HomeScreen from '../screens/HomeScreen';
 import WalletScreen from '../screens/WalletScreen';
 import OrderScreen from '../screens/OrderScreen';
@@ -14,9 +18,15 @@ import PickupValidatedScreen from '../screens/PickupValidatedScreen';
 import DeliveryScreen from '../screens/DeliveryScreen';
 import ValidateDeliveryScreen from '../screens/ValidateDeliveryScreen';
 import SuccessScreen from '../screens/SuccessScreen';
-import type { RootStackParamList } from '../types/navigation';
 
-const Stack = createNativeStackNavigator<RootStackParamList>();
+import type {
+  RootStackParamList,
+} from '../types/navigation';
+
+const Stack =
+  createNativeStackNavigator<
+    RootStackParamList
+  >();
 
 const navigationTheme = {
   ...DefaultTheme,
@@ -28,87 +38,155 @@ const navigationTheme = {
 
 export default function AppNavigator() {
   return (
-    <NavigationContainer theme={navigationTheme}>
+    <NavigationContainer
+      theme={navigationTheme}
+    >
       <Stack.Navigator
         initialRouteName="Login"
         screenOptions={{
-          headerShadowVisible: false,
+          headerShadowVisible:
+            false,
+
           headerStyle: {
-            backgroundColor: '#F3F5F7',
+            backgroundColor:
+              '#F3F5F7',
           },
+
           headerTitleStyle: {
             fontWeight: '800',
           },
-          headerTintColor: '#171717',
-          animation: 'slide_from_right',
+
+          headerTintColor:
+            '#171717',
+
+          animation:
+            'slide_from_right',
         }}
       >
         <Stack.Screen
           name="Login"
-          component={LoginScreen}
-          options={{ headerShown: false }}
+          component={
+            LoginScreen
+          }
+          options={{
+            headerShown:
+              false,
+          }}
+        />
+
+        <Stack.Screen
+          name="RegisterDriver"
+          component={
+            RegisterDriverScreen
+          }
+          options={{
+            headerShown:
+              false,
+          }}
         />
 
         <Stack.Screen
           name="Home"
-          component={HomeScreen}
-          options={{ headerShown: false }}
+          component={
+            HomeScreen
+          }
+          options={{
+            headerShown:
+              false,
+          }}
         />
 
         <Stack.Screen
           name="Wallet"
-          component={WalletScreen}
-          options={{ title: 'Carteira' }}
+          component={
+            WalletScreen
+          }
+          options={{
+            title:
+              'Carteira',
+          }}
         />
 
         <Stack.Screen
           name="Order"
-          component={OrderScreen}
-          options={{ title: 'Detalhes do pedido' }}
+          component={
+            OrderScreen
+          }
+          options={{
+            title:
+              'Detalhes do pedido',
+          }}
         />
 
         <Stack.Screen
           name="Pickup"
-          component={PickupScreen}
-          options={{ title: 'Retirada' }}
+          component={
+            PickupScreen
+          }
+          options={{
+            title:
+              'Retirada',
+          }}
         />
 
         <Stack.Screen
           name="ValidatePickup"
-          component={ValidatePickupScreen}
-          options={{ headerShown: false }}
+          component={
+            ValidatePickupScreen
+          }
+          options={{
+            headerShown:
+              false,
+          }}
         />
 
         <Stack.Screen
           name="PickupValidated"
-          component={PickupValidatedScreen}
+          component={
+            PickupValidatedScreen
+          }
           options={{
-            headerShown: false,
-            gestureEnabled: false,
+            headerShown:
+              false,
+            gestureEnabled:
+              false,
           }}
         />
 
         <Stack.Screen
           name="Delivery"
-          component={DeliveryScreen}
+          component={
+            DeliveryScreen
+          }
           options={{
-            title: 'Entrega',
-            headerBackVisible: false,
+            title:
+              'Entrega',
+            headerBackVisible:
+              false,
           }}
         />
 
         <Stack.Screen
           name="ValidateDelivery"
-          component={ValidateDeliveryScreen}
-          options={{ headerShown: false }}
+          component={
+            ValidateDeliveryScreen
+          }
+          options={{
+            headerShown:
+              false,
+          }}
         />
 
         <Stack.Screen
           name="Success"
-          component={SuccessScreen}
+          component={
+            SuccessScreen
+          }
           options={{
-            headerShown: false,
-            gestureEnabled: false,
+            headerShown:
+              false,
+            gestureEnabled:
+              false,
           }}
         />
       </Stack.Navigator>
