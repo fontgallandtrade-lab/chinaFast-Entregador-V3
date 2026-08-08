@@ -273,15 +273,14 @@ export default function RegisterDriverScreen({
         });
 
       Alert.alert(
-        'Cadastro enviado',
-        response.message ||
-          'Seu cadastro foi enviado para análise.',
+        'Cadastro criado',
+        'Agora envie sua CNH, selfie e documento da moto.',
         [
           {
-            text: 'OK',
+            text: 'CONTINUAR',
             onPress: () =>
               navigation.replace(
-                'Login',
+                'DriverDocuments',
               ),
           },
         ],
