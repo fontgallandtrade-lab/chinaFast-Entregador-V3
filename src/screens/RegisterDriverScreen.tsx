@@ -5,6 +5,7 @@ import React, {
 import {
   ActivityIndicator,
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
@@ -16,6 +17,9 @@ import {
   View,
 } from 'react-native';
 
+import * as ImagePicker
+  from 'expo-image-picker';
+
 import type {
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
@@ -23,6 +27,10 @@ import type {
 import {
   authService,
 } from '../services/auth';
+
+import {
+  apiRequest,
+} from '../services/api';
 
 import type {
   RootStackParamList,
@@ -33,6 +41,33 @@ type Props =
     RootStackParamList,
     'RegisterDriver'
   >;
+
+type DocumentKey =
+  | 'cnh_front'
+  | 'cnh_back'
+  | 'selfie'
+  | 'crlv';
+
+type SelectedDocument = {
+  uri: string;
+  name: string;
+  type: string;
+};
+
+const documentLabels:
+Record<DocumentKey, string> = {
+  cnh_front:
+    'CNH - Frente',
+
+  cnh_back:
+    'CNH - Verso',
+
+  selfie:
+    'Selfie do entregador',
+
+  crlv:
+    'CRLV / Documento da moto',
+};
 
 function digits(
   value: string,
@@ -47,7 +82,10 @@ function formatCpf(
   value: string,
 ): string {
   const v =
-    digits(value).slice(0, 11);
+    digits(value).slice(
+      0,
+      11,
+    );
 
   return v
     .replace(
@@ -68,7 +106,10 @@ function formatPhone(
   value: string,
 ): string {
   const v =
-    digits(value).slice(0, 11);
+    digits(value).slice(
+      0,
+      11,
+    );
 
   if (
     v.length <= 10
@@ -125,16 +166,25 @@ export default function RegisterDriverScreen({
   const [password, setPassword] =
     useState('');
 
-  const [confirmPassword, setConfirmPassword] =
+  const [
+    confirmPassword,
+    setConfirmPassword,
+  ] =
     useState('');
 
   const [cpf, setCpf] =
     useState('');
 
-  const [cnhNumber, setCnhNumber] =
+  const [
+    cnhNumber,
+    setCnhNumber,
+  ] =
     useState('');
 
-  const [cnhExpiration, setCnhExpiration] =
+  const [
+    cnhExpiration,
+    setCnhExpiration,
+  ] =
     useState('');
 
   const [brand, setBrand] =
@@ -152,10 +202,151 @@ export default function RegisterDriverScreen({
   const [year, setYear] =
     useState('');
 
-  const [loading, setLoading] =
+  const [
+    documents,
+    setDocuments,
+  ] =
+    useState<
+      Partial<
+        Record<
+          DocumentKey,
+          SelectedDocument
+        >
+      >
+    >({});
+
+  const [
+    loading,
+    setLoading,
+  ] =
     useState(false);
 
-  async function handleRegister() {
+  const [
+    accountCreated,
+    setAccountCreated,
+  ] =
+    useState(false);
+
+  async function selectFromGallery(
+    documentKey: DocumentKey,
+  ) {
+    const permission =
+      await ImagePicker
+        .requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      Alert.alert(
+        'Permissão necessária',
+        'Permita o acesso às fotos do celular.',
+      );
+
+      return;
+    }
+
+    const result =
+      await ImagePicker
+        .launchImageLibraryAsync({
+          mediaTypes:
+            ['images'],
+
+          allowsEditing:
+            false,
+
+          quality:
+            0.85,
+        });
+
+    if (
+      result.canceled ||
+      !result.assets?.[0]
+    ) {
+      return;
+    }
+
+    const asset =
+      result.assets[0];
+
+    setDocuments(
+      current => ({
+        ...current,
+
+        [documentKey]: {
+          uri:
+            asset.uri,
+
+          name:
+            asset.fileName ||
+            `${documentKey}.jpg`,
+
+          type:
+            asset.mimeType ||
+            'image/jpeg',
+        },
+      }),
+    );
+  }
+
+  async function takePhoto(
+    documentKey: DocumentKey,
+  ) {
+    const permission =
+      await ImagePicker
+        .requestCameraPermissionsAsync();
+
+    if (!permission.granted) {
+      Alert.alert(
+        'Permissão necessária',
+        'Permita o acesso à câmera.',
+      );
+
+      return;
+    }
+
+    const result =
+      await ImagePicker
+        .launchCameraAsync({
+          mediaTypes:
+            ['images'],
+
+          allowsEditing:
+            false,
+
+          quality:
+            0.85,
+        });
+
+    if (
+      result.canceled ||
+      !result.assets?.[0]
+    ) {
+      return;
+    }
+
+    const asset =
+      result.assets[0];
+
+    setDocuments(
+      current => ({
+        ...current,
+
+        [documentKey]: {
+          uri:
+            asset.uri,
+
+          name:
+            asset.fileName ||
+            `${documentKey}.jpg`,
+
+          type:
+            asset.mimeType ||
+            'image/jpeg',
+        },
+      }),
+    );
+  }
+
+  function validateForm():
+  boolean {
     if (
       !name.trim() ||
       !email.trim() ||
@@ -171,7 +362,7 @@ export default function RegisterDriverScreen({
         'Preencha todos os campos obrigatórios.',
       );
 
-      return;
+      return false;
     }
 
     if (
@@ -182,7 +373,7 @@ export default function RegisterDriverScreen({
         'A senha deve ter pelo menos 8 caracteres.',
       );
 
-      return;
+      return false;
     }
 
     if (
@@ -194,112 +385,363 @@ export default function RegisterDriverScreen({
         'A confirmação da senha não confere.',
       );
 
-      return;
+      return false;
     }
 
     if (
-      digits(cpf).length !== 11
+      digits(cpf).length !==
+      11
     ) {
       Alert.alert(
         'CPF inválido',
         'Digite um CPF com 11 números.',
       );
 
-      return;
+      return false;
     }
 
     if (
-      digits(cnhNumber).length < 9
+      digits(cnhNumber).length <
+      9
     ) {
       Alert.alert(
         'CNH inválida',
         'Confira o número da CNH.',
       );
 
-      return;
+      return false;
     }
 
     if (
-      formatPlate(plate).length !== 7
+      !/^\d{4}-\d{2}-\d{2}$/.test(
+        cnhExpiration.trim(),
+      )
+    ) {
+      Alert.alert(
+        'Validade inválida',
+        'Digite a validade no formato AAAA-MM-DD. Exemplo: 2030-12-31.',
+      );
+
+      return false;
+    }
+
+    if (
+      formatPlate(plate).length !==
+      7
     ) {
       Alert.alert(
         'Placa inválida',
         'Digite uma placa válida.',
       );
 
+      return false;
+    }
+
+    const requiredDocuments:
+      DocumentKey[] = [
+        'cnh_front',
+        'cnh_back',
+        'selfie',
+        'crlv',
+      ];
+
+    const missing =
+      requiredDocuments.filter(
+        key =>
+          !documents[key],
+      );
+
+    if (
+      missing.length > 0
+    ) {
+      Alert.alert(
+        'Documentos faltando',
+        'Adicione CNH frente, CNH verso, selfie e CRLV.',
+      );
+
+      return false;
+    }
+
+    return true;
+  }
+
+  async function uploadDocuments() {
+    const formData =
+      new FormData();
+
+    const keys:
+      DocumentKey[] = [
+        'cnh_front',
+        'cnh_back',
+        'selfie',
+        'crlv',
+      ];
+
+    for (
+      const key
+      of keys
+    ) {
+      const document =
+        documents[key];
+
+      if (!document) {
+        continue;
+      }
+
+      formData.append(
+        key,
+        {
+          uri:
+            document.uri,
+
+          name:
+            document.name,
+
+          type:
+            document.type,
+        } as any,
+      );
+    }
+
+    await apiRequest(
+      '/driver/documents',
+      {
+        method: 'POST',
+
+        body:
+          formData,
+      },
+    );
+  }
+
+  async function handleRegister() {
+    if (
+      !accountCreated &&
+      !validateForm()
+    ) {
       return;
     }
 
     try {
       setLoading(true);
 
-      const response =
-        await authService.registerDriver({
-          name,
-          email,
-          phone:
-            digits(phone),
+      if (
+        !accountCreated
+      ) {
+        await authService
+          .registerDriver({
+            name,
 
-          password,
+            email,
 
-          document_number:
-            digits(cpf),
+            phone:
+              digits(phone),
 
-          cnh_number:
-            digits(cnhNumber),
+            password,
 
-          cnh_expiration:
-            cnhExpiration.trim(),
+            document_number:
+              digits(cpf),
 
-          vehicle_type:
-            'motorcycle',
+            cnh_number:
+              digits(
+                cnhNumber,
+              ),
 
-          vehicle_brand:
-            brand,
+            cnh_expiration:
+              cnhExpiration
+                .trim(),
 
-          vehicle_model:
-            model,
+            vehicle_type:
+              'motorcycle',
 
-          vehicle_color:
-            color,
+            vehicle_brand:
+              brand,
 
-          vehicle_plate:
-            formatPlate(plate),
+            vehicle_model:
+              model,
 
-          vehicle_year:
-            year.trim()
-              ? Number(year)
-              : null,
-        });
+            vehicle_color:
+              color,
+
+            vehicle_plate:
+              formatPlate(
+                plate,
+              ),
+
+            vehicle_year:
+              year.trim()
+                ? Number(year)
+                : null,
+          });
+
+        setAccountCreated(
+          true,
+        );
+      }
+
+      await uploadDocuments();
 
       Alert.alert(
-        'Cadastro criado',
-        'Agora envie sua CNH, selfie e documento da moto.',
+        'Cadastro enviado',
+        'Cadastro e documentos enviados com sucesso. Agora aguarde a análise da Taturana Express.',
         [
           {
-            text: 'CONTINUAR',
+            text: 'OK',
+
             onPress: () =>
               navigation.replace(
-                'DriverDocuments',
+                'Login',
               ),
           },
         ],
       );
     } catch (error) {
       Alert.alert(
-        'Não foi possível cadastrar',
+        accountCreated
+          ? 'Erro ao enviar documentos'
+          : 'Não foi possível cadastrar',
+
         error instanceof Error
           ? error.message
-          : 'Ocorreu um erro ao enviar o cadastro.',
+          : 'Ocorreu um erro durante o cadastro.',
       );
     } finally {
       setLoading(false);
     }
   }
 
+  function DocumentCard({
+    documentKey,
+  }: {
+    documentKey:
+      DocumentKey;
+  }) {
+    const document =
+      documents[
+        documentKey
+      ];
+
+    return (
+      <View
+        style={
+          styles.documentCard
+        }
+      >
+        <Text
+          style={
+            styles.documentTitle
+          }
+        >
+          {
+            documentLabels[
+              documentKey
+            ]
+          }
+        </Text>
+
+        {document ? (
+          <>
+            <Image
+              source={{
+                uri:
+                  document.uri,
+              }}
+              style={
+                styles.documentPreview
+              }
+            />
+
+            <Text
+              style={
+                styles.documentOk
+              }
+            >
+              ✓ Arquivo selecionado
+            </Text>
+          </>
+        ) : (
+          <View
+            style={
+              styles.documentEmpty
+            }
+          >
+            <Text
+              style={
+                styles.documentIcon
+              }
+            >
+              📷
+            </Text>
+
+            <Text
+              style={
+                styles.documentEmptyText
+              }
+            >
+              Nenhum arquivo
+              selecionado
+            </Text>
+          </View>
+        )}
+
+        <View
+          style={
+            styles.documentActions
+          }
+        >
+          <TouchableOpacity
+            style={
+              styles.documentButton
+            }
+            disabled={
+              loading
+            }
+            onPress={() =>
+              takePhoto(
+                documentKey,
+              )
+            }
+          >
+            <Text
+              style={
+                styles.documentButtonText
+              }
+            >
+              CÂMERA
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={
+              styles.documentButton
+            }
+            disabled={
+              loading
+            }
+            onPress={() =>
+              selectFromGallery(
+                documentKey,
+              )
+            }
+          >
+            <Text
+              style={
+                styles.documentButtonText
+              }
+            >
+              UPLOAD
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView
-      style={styles.container}
+      style={
+        styles.container
+      }
     >
       <KeyboardAvoidingView
         style={styles.flex}
@@ -313,7 +755,8 @@ export default function RegisterDriverScreen({
           contentContainerStyle={
             styles.content
           }
-          keyboardShouldPersistTaps="handled"
+          keyboardShouldPersistTaps=
+            "handled"
           showsVerticalScrollIndicator={
             false
           }
@@ -353,7 +796,9 @@ export default function RegisterDriverScreen({
             </View>
 
             <Text
-              style={styles.title}
+              style={
+                styles.title
+              }
             >
               Quero ser entregador
             </Text>
@@ -371,10 +816,9 @@ export default function RegisterDriverScreen({
                 styles.description
               }
             >
-              Preencha seus dados.
-              Seu cadastro será
-              analisado antes da
-              liberação para corridas.
+              Preencha seus dados
+              e envie os documentos
+              para análise.
             </Text>
           </View>
 
@@ -401,7 +845,10 @@ export default function RegisterDriverScreen({
               onChangeText={setName}
               placeholder="Seu nome completo"
               placeholderTextColor="#8A8A8A"
-              editable={!loading}
+              editable={
+                !loading &&
+                !accountCreated
+              }
             />
 
             <Text
@@ -416,10 +863,14 @@ export default function RegisterDriverScreen({
               onChangeText={setEmail}
               placeholder="seuemail@exemplo.com"
               placeholderTextColor="#8A8A8A"
-              keyboardType="email-address"
+              keyboardType=
+                "email-address"
               autoCapitalize="none"
               autoCorrect={false}
-              editable={!loading}
+              editable={
+                !loading &&
+                !accountCreated
+              }
             />
 
             <Text
@@ -442,7 +893,10 @@ export default function RegisterDriverScreen({
               placeholder="(15) 99999-9999"
               placeholderTextColor="#8A8A8A"
               keyboardType="phone-pad"
-              editable={!loading}
+              editable={
+                !loading &&
+                !accountCreated
+              }
             />
 
             <Text
@@ -465,7 +919,10 @@ export default function RegisterDriverScreen({
               placeholder="000.000.000-00"
               placeholderTextColor="#8A8A8A"
               keyboardType="number-pad"
-              editable={!loading}
+              editable={
+                !loading &&
+                !accountCreated
+              }
             />
 
             <Text
@@ -483,7 +940,10 @@ export default function RegisterDriverScreen({
               placeholder="Mínimo 8 caracteres"
               placeholderTextColor="#8A8A8A"
               secureTextEntry
-              editable={!loading}
+              editable={
+                !loading &&
+                !accountCreated
+              }
             />
 
             <Text
@@ -503,7 +963,10 @@ export default function RegisterDriverScreen({
               placeholder="Digite novamente"
               placeholderTextColor="#8A8A8A"
               secureTextEntry
-              editable={!loading}
+              editable={
+                !loading &&
+                !accountCreated
+              }
             />
 
             <View
@@ -542,7 +1005,10 @@ export default function RegisterDriverScreen({
               placeholder="Número da CNH"
               placeholderTextColor="#8A8A8A"
               keyboardType="number-pad"
-              editable={!loading}
+              editable={
+                !loading &&
+                !accountCreated
+              }
             />
 
             <Text
@@ -561,8 +1027,10 @@ export default function RegisterDriverScreen({
               }
               placeholder="AAAA-MM-DD"
               placeholderTextColor="#8A8A8A"
-              autoCapitalize="none"
-              editable={!loading}
+              editable={
+                !loading &&
+                !accountCreated
+              }
             />
 
             <Text
@@ -570,7 +1038,7 @@ export default function RegisterDriverScreen({
                 styles.dateHint
               }
             >
-              Exemplo: 2028-12-31
+              Exemplo: 2030-12-31
             </Text>
 
             <View
@@ -606,8 +1074,12 @@ export default function RegisterDriverScreen({
               }
               placeholder="ABC1D23"
               placeholderTextColor="#8A8A8A"
-              autoCapitalize="characters"
-              editable={!loading}
+              autoCapitalize=
+                "characters"
+              editable={
+                !loading &&
+                !accountCreated
+              }
             />
 
             <Text
@@ -624,7 +1096,10 @@ export default function RegisterDriverScreen({
               }
               placeholder="Ex.: Honda"
               placeholderTextColor="#8A8A8A"
-              editable={!loading}
+              editable={
+                !loading &&
+                !accountCreated
+              }
             />
 
             <Text
@@ -641,7 +1116,10 @@ export default function RegisterDriverScreen({
               }
               placeholder="Ex.: CG 160"
               placeholderTextColor="#8A8A8A"
-              editable={!loading}
+              editable={
+                !loading &&
+                !accountCreated
+              }
             />
 
             <Text
@@ -666,7 +1144,10 @@ export default function RegisterDriverScreen({
               placeholder="Ex.: 2024"
               placeholderTextColor="#8A8A8A"
               keyboardType="number-pad"
-              editable={!loading}
+              editable={
+                !loading &&
+                !accountCreated
+              }
             />
 
             <Text
@@ -683,7 +1164,53 @@ export default function RegisterDriverScreen({
               }
               placeholder="Ex.: Preta"
               placeholderTextColor="#8A8A8A"
-              editable={!loading}
+              editable={
+                !loading &&
+                !accountCreated
+              }
+            />
+
+            <View
+              style={
+                styles.separator
+              }
+            />
+
+            <Text
+              style={
+                styles.sectionTitle
+              }
+            >
+              Documentos
+            </Text>
+
+            <Text
+              style={
+                styles.documentsHelp
+              }
+            >
+              Tire a foto ou faça
+              upload de cada documento.
+            </Text>
+
+            <DocumentCard
+              documentKey=
+                "cnh_front"
+            />
+
+            <DocumentCard
+              documentKey=
+                "cnh_back"
+            />
+
+            <DocumentCard
+              documentKey=
+                "selfie"
+            />
+
+            <DocumentCard
+              documentKey=
+                "crlv"
             />
 
             <View
@@ -696,7 +1223,7 @@ export default function RegisterDriverScreen({
                   styles.noticeTitle
                 }
               >
-                Próxima etapa
+                Análise do cadastro
               </Text>
 
               <Text
@@ -704,12 +1231,11 @@ export default function RegisterDriverScreen({
                   styles.noticeText
                 }
               >
-                Após enviar os
-                dados, também serão
-                solicitados CNH,
-                selfie e documento
-                do veículo para
-                aprovação.
+                Depois do envio,
+                os documentos ficarão
+                pendentes até a
+                aprovação da
+                Taturana Express.
               </Text>
             </View>
 
@@ -717,10 +1243,13 @@ export default function RegisterDriverScreen({
               activeOpacity={0.85}
               style={[
                 styles.submitButton,
+
                 loading &&
                   styles.disabled,
               ]}
-              disabled={loading}
+              disabled={
+                loading
+              }
               onPress={
                 handleRegister
               }
@@ -735,7 +1264,11 @@ export default function RegisterDriverScreen({
                     styles.submitText
                   }
                 >
-                  ENVIAR CADASTRO
+                  {
+                    accountCreated
+                      ? 'REENVIAR DOCUMENTOS'
+                      : 'ENVIAR CADASTRO E DOCUMENTOS'
+                  }
                 </Text>
               )}
             </TouchableOpacity>
@@ -754,170 +1287,476 @@ const styles =
 
     container: {
       flex: 1,
+
       backgroundColor:
         '#F4F6F8',
     },
 
     content: {
-      paddingHorizontal: 20,
-      paddingTop: 18,
-      paddingBottom: 50,
+      paddingHorizontal:
+        20,
+
+      paddingTop:
+        18,
+
+      paddingBottom:
+        50,
     },
 
     backButton: {
       alignSelf:
         'flex-start',
-      paddingVertical: 8,
-      paddingRight: 15,
+
+      paddingVertical:
+        8,
+
+      paddingRight:
+        15,
     },
 
     backText: {
-      color: '#171717',
-      fontSize: 16,
-      fontWeight: '800',
+      color:
+        '#171717',
+
+      fontSize:
+        16,
+
+      fontWeight:
+        '800',
     },
 
     brandContainer: {
-      alignItems: 'center',
-      marginTop: 15,
-      marginBottom: 25,
+      alignItems:
+        'center',
+
+      marginTop:
+        15,
+
+      marginBottom:
+        25,
     },
 
     logo: {
-      width: 78,
-      height: 78,
-      borderRadius: 22,
+      width:
+        78,
+
+      height:
+        78,
+
+      borderRadius:
+        22,
+
       backgroundColor:
         '#111111',
-      alignItems: 'center',
+
+      alignItems:
+        'center',
+
       justifyContent:
         'center',
-      marginBottom: 15,
+
+      marginBottom:
+        15,
     },
 
     logoText: {
-      fontSize: 39,
+      fontSize:
+        39,
     },
 
     title: {
-      color: '#171717',
-      fontSize: 28,
-      fontWeight: '900',
-      textAlign: 'center',
+      color:
+        '#171717',
+
+      fontSize:
+        28,
+
+      fontWeight:
+        '900',
+
+      textAlign:
+        'center',
     },
 
     subtitle: {
-      color: '#63C132',
-      fontSize: 18,
-      fontWeight: '900',
-      marginTop: 5,
+      color:
+        '#63C132',
+
+      fontSize:
+        18,
+
+      fontWeight:
+        '900',
+
+      marginTop:
+        5,
     },
 
     description: {
-      color: '#6A6A6A',
-      textAlign: 'center',
-      fontSize: 14,
-      lineHeight: 20,
-      marginTop: 10,
-      maxWidth: 330,
+      color:
+        '#6A6A6A',
+
+      textAlign:
+        'center',
+
+      fontSize:
+        14,
+
+      lineHeight:
+        20,
+
+      marginTop:
+        10,
     },
 
     card: {
       backgroundColor:
         '#FFFFFF',
-      borderRadius: 24,
-      padding: 20,
-      elevation: 3,
+
+      borderRadius:
+        24,
+
+      padding:
+        20,
+
+      elevation:
+        3,
+
       shadowColor:
         '#000000',
+
       shadowOffset: {
-        width: 0,
-        height: 3,
+        width:
+          0,
+
+        height:
+          3,
       },
-      shadowOpacity: 0.07,
-      shadowRadius: 8,
+
+      shadowOpacity:
+        0.07,
+
+      shadowRadius:
+        8,
     },
 
     sectionTitle: {
-      color: '#171717',
-      fontSize: 20,
-      fontWeight: '900',
-      marginBottom: 16,
+      color:
+        '#171717',
+
+      fontSize:
+        21,
+
+      fontWeight:
+        '900',
+
+      marginBottom:
+        14,
     },
 
     label: {
-      color: '#292929',
-      fontSize: 14,
-      fontWeight: '700',
-      marginBottom: 8,
-      marginTop: 12,
+      color:
+        '#292929',
+
+      fontSize:
+        14,
+
+      fontWeight:
+        '700',
+
+      marginBottom:
+        8,
+
+      marginTop:
+        12,
     },
 
     input: {
-      minHeight: 54,
-      borderWidth: 1,
+      minHeight:
+        54,
+
+      borderWidth:
+        1,
+
       borderColor:
         '#D7DCE1',
-      borderRadius: 14,
-      paddingHorizontal: 15,
-      color: '#171717',
+
+      borderRadius:
+        14,
+
+      paddingHorizontal:
+        15,
+
+      color:
+        '#171717',
+
       backgroundColor:
         '#FAFAFA',
-      fontSize: 16,
+
+      fontSize:
+        16,
     },
 
     dateHint: {
-      color: '#888888',
-      fontSize: 12,
-      marginTop: 6,
+      color:
+        '#888888',
+
+      fontSize:
+        12,
+
+      marginTop:
+        6,
     },
 
     separator: {
-      height: 1,
+      height:
+        1,
+
       backgroundColor:
         '#E8EAED',
-      marginVertical: 25,
+
+      marginVertical:
+        25,
+    },
+
+    documentsHelp: {
+      color:
+        '#737373',
+
+      fontSize:
+        13,
+
+      lineHeight:
+        19,
+
+      marginBottom:
+        15,
+    },
+
+    documentCard: {
+      borderWidth:
+        1,
+
+      borderColor:
+        '#E1E4E7',
+
+      borderRadius:
+        17,
+
+      padding:
+        14,
+
+      marginBottom:
+        15,
+
+      backgroundColor:
+        '#FAFAFA',
+    },
+
+    documentTitle: {
+      color:
+        '#171717',
+
+      fontSize:
+        16,
+
+      fontWeight:
+        '900',
+
+      marginBottom:
+        10,
+    },
+
+    documentEmpty: {
+      minHeight:
+        130,
+
+      borderRadius:
+        13,
+
+      borderWidth:
+        1,
+
+      borderStyle:
+        'dashed',
+
+      borderColor:
+        '#C9CED3',
+
+      alignItems:
+        'center',
+
+      justifyContent:
+        'center',
+
+      backgroundColor:
+        '#FFFFFF',
+    },
+
+    documentIcon: {
+      fontSize:
+        34,
+    },
+
+    documentEmptyText: {
+      color:
+        '#7B7B7B',
+
+      marginTop:
+        7,
+
+      textAlign:
+        'center',
+    },
+
+    documentPreview: {
+      width:
+        '100%',
+
+      height:
+        170,
+
+      borderRadius:
+        13,
+
+      resizeMode:
+        'cover',
+    },
+
+    documentOk: {
+      color:
+        '#4B9C27',
+
+      fontWeight:
+        '800',
+
+      fontSize:
+        12,
+
+      marginTop:
+        8,
+    },
+
+    documentActions: {
+      flexDirection:
+        'row',
+
+      gap:
+        10,
+
+      marginTop:
+        12,
+    },
+
+    documentButton: {
+      flex:
+        1,
+
+      minHeight:
+        46,
+
+      borderRadius:
+        12,
+
+      borderWidth:
+        2,
+
+      borderColor:
+        '#63C132',
+
+      alignItems:
+        'center',
+
+      justifyContent:
+        'center',
+    },
+
+    documentButtonText: {
+      color:
+        '#4B9C27',
+
+      fontWeight:
+        '900',
+
+      fontSize:
+        13,
     },
 
     notice: {
       backgroundColor:
         '#F1F8EC',
-      borderRadius: 15,
-      padding: 15,
-      marginTop: 24,
+
+      borderRadius:
+        15,
+
+      padding:
+        15,
+
+      marginTop:
+        8,
     },
 
     noticeTitle: {
-      color: '#438A20',
-      fontWeight: '900',
-      fontSize: 14,
+      color:
+        '#438A20',
+
+      fontWeight:
+        '900',
+
+      fontSize:
+        14,
     },
 
     noticeText: {
-      color: '#55704A',
-      fontSize: 13,
-      lineHeight: 19,
-      marginTop: 5,
+      color:
+        '#55704A',
+
+      fontSize:
+        13,
+
+      lineHeight:
+        19,
+
+      marginTop:
+        5,
     },
 
     submitButton: {
-      minHeight: 56,
+      minHeight:
+        58,
+
       backgroundColor:
         '#63C132',
-      borderRadius: 14,
-      alignItems: 'center',
+
+      borderRadius:
+        14,
+
+      alignItems:
+        'center',
+
       justifyContent:
         'center',
-      marginTop: 20,
+
+      marginTop:
+        20,
     },
 
     disabled: {
-      opacity: 0.65,
+      opacity:
+        0.65,
     },
 
     submitText: {
-      color: '#FFFFFF',
-      fontSize: 15,
-      fontWeight: '900',
+      color:
+        '#FFFFFF',
+
+      fontSize:
+        14,
+
+      fontWeight:
+        '900',
+
+      textAlign:
+        'center',
     },
   });
