@@ -1,7 +1,7 @@
 import { io, Socket } from 'socket.io-client';
 
 const SOCKET_URL =
-  'https://api.chamabebidas.com.br';
+  'https://api.taturanaexpress.com.br';
 
 let socket: Socket | null = null;
 let connectedDriverId: number | null = null;

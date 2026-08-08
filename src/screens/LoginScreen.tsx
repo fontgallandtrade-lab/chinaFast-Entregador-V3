@@ -66,7 +66,7 @@ export default function LoginScreen({ navigation }: Props) {
             <Text style={styles.logoText}>CF</Text>
           </View>
 
-          <Text style={styles.title}>ChinaFast</Text>
+          <Text style={styles.title}>Taturana Express</Text>
           <Text style={styles.subtitle}>Aplicativo do entregador</Text>
         </View>
 
