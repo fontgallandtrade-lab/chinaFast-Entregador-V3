@@ -397,8 +397,8 @@ export default function DriverDocumentsScreen({
                 styles.emptyText
               }
             >
-              Nenhuma imagem
-              selecionada
+              Nenhum arquivo
+              selecionado
             </Text>
           </View>
         )}
@@ -448,7 +448,7 @@ export default function DriverDocumentsScreen({
                 styles.secondaryText
               }
             >
-              GALERIA
+              UPLOAD
             </Text>
           </TouchableOpacity>
         </View>
