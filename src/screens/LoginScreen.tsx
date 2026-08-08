@@ -63,7 +63,7 @@ export default function LoginScreen({ navigation }: Props) {
       >
         <View style={styles.logoContainer}>
           <View style={styles.logo}>
-            <Text style={styles.logoText}>CF</Text>
+            <Text style={styles.logoText}>🐛</Text>
           </View>
 
           <Text style={styles.title}>Taturana Express</Text>
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FF6A00',
+    backgroundColor: '#63C132',
     marginTop: 18,
   },
 
