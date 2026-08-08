@@ -1,9 +1,15 @@
-import type { Delivery } from './delivery';
+import type {
+  Delivery,
+} from './delivery';
 
 export type RootStackParamList = {
   Login: undefined;
 
-  RegisterDriver: undefined;
+  RegisterDriver:
+    undefined;
+
+  DriverDocuments:
+    undefined;
 
   Home: undefined;
 

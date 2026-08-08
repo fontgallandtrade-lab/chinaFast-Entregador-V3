@@ -23,7 +23,6 @@ export type DriverRegisterData = {
   password: string;
 
   document_number: string;
-
   cnh_number: string;
   cnh_expiration: string;
 
@@ -37,12 +36,20 @@ export type DriverRegisterData = {
   vehicle_model: string;
   vehicle_color: string;
   vehicle_plate: string;
-  vehicle_year: number | null;
+  vehicle_year:
+    | number
+    | null;
 };
 
 export type DriverRegisterResponse = {
   success: boolean;
   message: string;
+
+  token: string;
+
+  user: AuthUser & {
+    approval_status?: string;
+  };
 
   driver: {
     id: number;
@@ -57,7 +64,8 @@ export type DriverRegisterResponse = {
 };
 
 async function login(
-  credentials: LoginCredentials,
+  credentials:
+    LoginCredentials,
 ): Promise<LoginResponse> {
   const response =
     await apiRequest<LoginResponse>(
@@ -65,19 +73,23 @@ async function login(
       {
         method: 'POST',
         authenticated: false,
-        body: JSON.stringify({
-          email:
-            credentials.email
-              .trim()
-              .toLowerCase(),
-          password:
-            credentials.password,
-        }),
+
+        body:
+          JSON.stringify({
+            email:
+              credentials.email
+                .trim()
+                .toLowerCase(),
+
+            password:
+              credentials.password,
+          }),
       },
     );
 
   if (
-    response.user.role !== 'driver'
+    response.user.role !==
+    'driver'
   ) {
     throw new Error(
       'Esta conta não pertence a um entregador.',
@@ -103,57 +115,72 @@ async function login(
 async function registerDriver(
   data: DriverRegisterData,
 ): Promise<DriverRegisterResponse> {
-  return apiRequest<DriverRegisterResponse>(
-    '/auth/driver/register',
-    {
-      method: 'POST',
-      authenticated: false,
-      body: JSON.stringify({
-        name:
-          data.name.trim(),
+  const response =
+    await apiRequest<
+      DriverRegisterResponse
+    >(
+      '/auth/driver/register',
+      {
+        method: 'POST',
+        authenticated: false,
 
-        email:
-          data.email
-            .trim()
-            .toLowerCase(),
+        body:
+          JSON.stringify({
+            name:
+              data.name.trim(),
 
-        phone:
-          data.phone.trim(),
+            email:
+              data.email
+                .trim()
+                .toLowerCase(),
 
-        password:
-          data.password,
+            phone:
+              data.phone.trim(),
 
-        document_number:
-          data.document_number,
+            password:
+              data.password,
 
-        cnh_number:
-          data.cnh_number,
+            document_number:
+              data.document_number,
 
-        cnh_expiration:
-          data.cnh_expiration,
+            cnh_number:
+              data.cnh_number,
 
-        vehicle_type:
-          data.vehicle_type,
+            cnh_expiration:
+              data.cnh_expiration,
 
-        vehicle_brand:
-          data.vehicle_brand.trim(),
+            vehicle_type:
+              data.vehicle_type,
 
-        vehicle_model:
-          data.vehicle_model.trim(),
+            vehicle_brand:
+              data.vehicle_brand
+                .trim(),
 
-        vehicle_color:
-          data.vehicle_color.trim(),
+            vehicle_model:
+              data.vehicle_model
+                .trim(),
 
-        vehicle_plate:
-          data.vehicle_plate
-            .trim()
-            .toUpperCase(),
+            vehicle_color:
+              data.vehicle_color
+                .trim(),
 
-        vehicle_year:
-          data.vehicle_year,
-      }),
-    },
+            vehicle_plate:
+              data.vehicle_plate
+                .trim()
+                .toUpperCase(),
+
+            vehicle_year:
+              data.vehicle_year,
+          }),
+      },
+    );
+
+  await saveSession(
+    response.token,
+    response.user,
   );
+
+  return response;
 }
 
 async function logout():
@@ -168,10 +195,11 @@ async function getSession(): Promise<{
   const [
     token,
     user,
-  ] = await Promise.all([
-    getToken(),
-    getStoredUser<AuthUser>(),
-  ]);
+  ] =
+    await Promise.all([
+      getToken(),
+      getStoredUser<AuthUser>(),
+    ]);
 
   if (
     !token ||

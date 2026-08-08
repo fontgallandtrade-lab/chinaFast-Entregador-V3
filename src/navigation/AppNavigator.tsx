@@ -9,6 +9,7 @@ import {
 
 import LoginScreen from '../screens/LoginScreen';
 import RegisterDriverScreen from '../screens/RegisterDriverScreen';
+import DriverDocumentsScreen from '../screens/DriverDocumentsScreen';
 import HomeScreen from '../screens/HomeScreen';
 import WalletScreen from '../screens/WalletScreen';
 import OrderScreen from '../screens/OrderScreen';
@@ -78,6 +79,17 @@ export default function AppNavigator() {
           name="RegisterDriver"
           component={
             RegisterDriverScreen
+          }
+          options={{
+            headerShown:
+              false,
+          }}
+        />
+
+        <Stack.Screen
+          name="DriverDocuments"
+          component={
+            DriverDocumentsScreen
           }
           options={{
             headerShown:

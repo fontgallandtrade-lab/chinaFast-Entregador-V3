@@ -1,17 +1,13 @@
-export type UserRole =
-  | 'customer'
-  | 'company'
-  | 'driver'
-  | 'admin';
-
 export type AuthUser = {
   id: number;
-  driver_id?: number;
   name: string;
   email: string;
   phone?: string | null;
-  role: UserRole;
+  role: 'driver' | 'customer' | 'company' | 'admin';
   status: string;
+
+  driver_id?: number;
+  approval_status?: string;
 };
 
 export type LoginResponse = {
