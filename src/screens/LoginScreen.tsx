@@ -242,27 +242,6 @@ export default function LoginScreen({
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            activeOpacity={0.8}
-            style={
-              styles.documentsButton
-            }
-            disabled={loading}
-            onPress={() =>
-              navigation.navigate(
-                'DriverDocuments',
-              )
-            }
-          >
-            <Text
-              style={
-                styles.documentsText
-              }
-            >
-              ENVIAR DOCUMENTOS
-            </Text>
-          </TouchableOpacity>
-
           <Text
             style={
               styles.helpText
@@ -404,21 +383,6 @@ const styles =
 
     registerText: {
       color: '#4A9D23',
-      fontSize: 14,
-      fontWeight: '900',
-    },
-
-    documentsButton: {
-      height: 50,
-      borderRadius: 14,
-      backgroundColor: '#111111',
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginTop: 10,
-    },
-
-    documentsText: {
-      color: '#FFFFFF',
       fontSize: 14,
       fontWeight: '900',
     },
