@@ -31,6 +31,17 @@
           "defaultChannel": "novas-corridas"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "0a1f8840-5585-4215-92ed-77227969afe7"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/0a1f8840-5585-4215-92ed-77227969afe7"
+    }
   }
 }
