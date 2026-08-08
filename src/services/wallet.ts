@@ -46,7 +46,7 @@ async function getWallet(): Promise<DriverWallet> {
     await apiRequest<{
       success: boolean;
       wallet: DriverWallet;
-    }>('/wallet');
+    }>('/driver/wallet');
 
   return response.wallet;
 }
@@ -57,7 +57,7 @@ Promise<WalletTransaction[]> {
     await apiRequest<{
       success: boolean;
       transactions: WalletTransaction[];
-    }>('/wallet/statement');
+    }>('/driver/wallet/statement');
 
   return response.transactions;
 }
@@ -68,7 +68,7 @@ Promise<Withdrawal[]> {
     await apiRequest<{
       success: boolean;
       withdrawals: Withdrawal[];
-    }>('/wallet/withdrawals');
+    }>('/driver/wallet/withdrawals');
 
   return response.withdrawals;
 }
@@ -78,7 +78,7 @@ async function requestWithdrawal(
   pixKey: string,
 ): Promise<void> {
   await apiRequest(
-    '/wallet/withdrawals',
+    '/driver/wallet/withdrawals',
     {
       method: 'POST',
       body: JSON.stringify({
