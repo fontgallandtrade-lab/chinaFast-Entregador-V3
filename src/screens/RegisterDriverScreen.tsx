@@ -20,6 +20,19 @@ import {
 import * as ImagePicker
   from 'expo-image-picker';
 
+import { File } from 'expo-file-system';
+
+import { fetch as expoFetch }
+  from 'expo/fetch';
+
+import {
+  API_URL,
+} from '../constants/config';
+
+import {
+  getToken,
+} from '../services/api';
+
 import type {
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
@@ -466,6 +479,15 @@ export default function RegisterDriverScreen({
   }
 
   async function uploadDocuments() {
+    const token =
+      await getToken();
+
+    if (!token) {
+      throw new Error(
+        'Sessão não encontrada após o cadastro.',
+      );
+    }
+
     const formData =
       new FormData();
 
@@ -477,41 +499,70 @@ export default function RegisterDriverScreen({
         'crlv',
       ];
 
-    for (
-      const key
-      of keys
-    ) {
+    for (const key of keys) {
       const document =
         documents[key];
 
       if (!document) {
-        continue;
+        throw new Error(
+          `Documento obrigatório não selecionado: ${key}`,
+        );
       }
+
+      const file =
+        new File(
+          document.uri,
+        );
 
       formData.append(
         key,
-        {
-          uri:
-            document.uri,
-
-          name:
-            document.name,
-
-          type:
-            document.type,
-        } as any,
+        file,
       );
     }
 
-    await apiRequest(
-      '/driver/documents',
-      {
-        method: 'POST',
+    const response =
+      await expoFetch(
+        `${API_URL}/driver/documents`,
+        {
+          method: 'POST',
 
-        body:
-          formData,
-      },
-    );
+          headers: {
+            Accept:
+              'application/json',
+
+            Authorization:
+              `Bearer ${token}`,
+          },
+
+          body:
+            formData,
+        },
+      );
+
+    const raw =
+      await response.text();
+
+    let data: any = {};
+
+    try {
+      data =
+        raw
+          ? JSON.parse(raw)
+          : {};
+    } catch {
+      throw new Error(
+        'A API retornou uma resposta inválida.',
+      );
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        data?.message ||
+          `Erro ao enviar documentos (${response.status}).`,
+      );
+    }
+
+    return data;
   }
 
   async function handleRegister() {
