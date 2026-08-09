@@ -73,16 +73,49 @@ export default function LoginScreen({
           password,
         });
 
-      if (
-        response.user
-          .approval_status &&
-        response.user
-          .approval_status !==
-          'approved'
-      ) {
+      const approvalStatus =
+        response.user.approval_status;
+
+      if (approvalStatus === 'rejected') {
+        Alert.alert(
+          'Documentação recusada',
+          'Um ou mais documentos precisam ser corrigidos. Veja o motivo e envie novamente.',
+          [
+            {
+              text: 'CORRIGIR DOCUMENTOS',
+              onPress: () =>
+                navigation.replace(
+                  'DriverDocuments',
+                ),
+            },
+          ],
+        );
+
+        return;
+      }
+
+      if (approvalStatus === 'pending') {
         Alert.alert(
           'Cadastro em análise',
-          'Seu cadastro de entregador ainda não foi aprovado.',
+          'Seus documentos estão sendo analisados. Aguarde a aprovação.',
+        );
+
+        return;
+      }
+
+      if (approvalStatus === 'suspended') {
+        Alert.alert(
+          'Cadastro suspenso',
+          'Seu cadastro está suspenso. Entre em contato com o suporte.',
+        );
+
+        return;
+      }
+
+      if (approvalStatus !== 'approved') {
+        Alert.alert(
+          'Acesso não liberado',
+          'Seu cadastro ainda não está liberado para realizar entregas.',
         );
 
         return;
