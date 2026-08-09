@@ -1,11 +1,19 @@
+import React, {
+  useEffect,
+} from 'react';
+
 import {
   NavigationContainer,
   DefaultTheme,
+  createNavigationContainerRef,
 } from '@react-navigation/native';
 
 import {
   createNativeStackNavigator,
 } from '@react-navigation/native-stack';
+
+import * as Notifications
+  from 'expo-notifications';
 
 import LoginScreen from '../screens/LoginScreen';
 import RegisterDriverScreen from '../screens/RegisterDriverScreen';
@@ -29,18 +37,119 @@ const Stack =
     RootStackParamList
   >();
 
+export const navigationRef =
+  createNavigationContainerRef<
+    RootStackParamList
+  >();
+
 const navigationTheme = {
   ...DefaultTheme,
+
   colors: {
     ...DefaultTheme.colors,
-    background: '#F3F5F7',
+
+    background:
+      '#F3F5F7',
   },
 };
 
+function handleNotificationNavigation(
+  response:
+    Notifications.NotificationResponse,
+) {
+  const data =
+    response.notification.request
+      .content.data;
+
+  const type =
+    String(
+      data?.type || '',
+    );
+
+  if (!navigationRef.isReady()) {
+    return;
+  }
+
+  if (
+    type ===
+      'driver_document_rejected' ||
+    type ===
+      'driver_documents_rejected'
+  ) {
+    navigationRef.reset({
+      index: 0,
+
+      routes: [
+        {
+          name:
+            'DriverDocuments',
+        },
+      ],
+    });
+
+    return;
+  }
+
+  if (
+    type ===
+    'driver_approved'
+  ) {
+    navigationRef.reset({
+      index: 0,
+
+      routes: [
+        {
+          name:
+            'Home',
+        },
+      ],
+    });
+  }
+}
+
 export default function AppNavigator() {
+  useEffect(() => {
+    const subscription =
+      Notifications
+        .addNotificationResponseReceivedListener(
+          response => {
+            handleNotificationNavigation(
+              response,
+            );
+          },
+        );
+
+    Notifications
+      .getLastNotificationResponseAsync()
+      .then(response => {
+        if (response) {
+          setTimeout(() => {
+            handleNotificationNavigation(
+              response,
+            );
+          }, 700);
+        }
+      })
+      .catch(error => {
+        console.log(
+          '[push] Não foi possível ler a última notificação:',
+          error,
+        );
+      });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
   return (
     <NavigationContainer
-      theme={navigationTheme}
+      ref={
+        navigationRef
+      }
+      theme={
+        navigationTheme
+      }
     >
       <Stack.Navigator
         initialRouteName="Login"
@@ -54,7 +163,8 @@ export default function AppNavigator() {
           },
 
           headerTitleStyle: {
-            fontWeight: '800',
+            fontWeight:
+              '800',
           },
 
           headerTintColor:
@@ -160,6 +270,7 @@ export default function AppNavigator() {
           options={{
             headerShown:
               false,
+
             gestureEnabled:
               false,
           }}
@@ -173,6 +284,7 @@ export default function AppNavigator() {
           options={{
             title:
               'Entrega',
+
             headerBackVisible:
               false,
           }}
@@ -197,6 +309,7 @@ export default function AppNavigator() {
           options={{
             headerShown:
               false,
+
             gestureEnabled:
               false,
           }}
