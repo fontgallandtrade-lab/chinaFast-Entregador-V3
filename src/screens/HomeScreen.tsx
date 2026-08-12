@@ -743,6 +743,30 @@ export default function HomeScreen({
               </Text>
             </View>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.85}
+            style={styles.quickCard}
+            onPress={() =>
+              navigation.navigate('Support')
+            }
+          >
+            <View style={styles.quickIcon}>
+              <Text style={styles.quickIconText}>
+                ?
+              </Text>
+            </View>
+
+            <View style={styles.quickTextContainer}>
+              <Text style={styles.quickCardTitle}>
+                Suporte
+              </Text>
+
+              <Text style={styles.quickCardSubtitle}>
+                Central de ajuda
+              </Text>
+            </View>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.sectionHeader}>

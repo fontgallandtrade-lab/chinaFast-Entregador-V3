@@ -21,6 +21,7 @@ import DriverDocumentsScreen from '../screens/DriverDocumentsScreen';
 import HomeScreen from '../screens/HomeScreen';
 import WalletScreen from '../screens/WalletScreen';
 import HistoryScreen from '../screens/HistoryScreen';
+import SupportScreen from '../screens/SupportScreen';
 import OrderScreen from '../screens/OrderScreen';
 import PickupScreen from '../screens/PickupScreen';
 import ValidatePickupScreen from '../screens/ValidatePickupScreen';
@@ -238,6 +239,25 @@ export default function AppNavigator() {
       options={{
         title:
           'Histórico',
+
+        headerStyle: {
+          backgroundColor:
+            '#0B0D10',
+        },
+
+        headerTintColor:
+          '#FFFFFF',
+      }}
+    />
+
+    <Stack.Screen
+      name="Support"
+      component={
+        SupportScreen
+      }
+      options={{
+        title:
+          'Suporte',
 
         headerStyle: {
           backgroundColor:

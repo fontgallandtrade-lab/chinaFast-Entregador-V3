@@ -17,6 +17,8 @@ export type RootStackParamList = {
 
   History: undefined;
 
+  Support: undefined;
+
   Order: {
     delivery: Delivery;
   };
