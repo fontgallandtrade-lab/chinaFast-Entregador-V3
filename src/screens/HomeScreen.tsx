@@ -116,6 +116,12 @@ export default function HomeScreen({
   const [gpsTracking, setGpsTracking] =
     useState(false);
 
+  const [todayEarnings, setTodayEarnings] =
+    useState(0);
+
+  const [todayDeliveries, setTodayDeliveries] =
+    useState(0);
+
   const loadSession = useCallback(
     async () => {
       const session =
@@ -138,6 +144,53 @@ export default function HomeScreen({
       try {
         const myDeliveries =
           await deliveryService.getMine();
+
+        const now = new Date();
+
+        const deliveredToday =
+          myDeliveries.filter(delivery => {
+            if (
+              delivery.status !== 'delivered' ||
+              !delivery.delivered_at
+            ) {
+              return false;
+            }
+
+            const deliveredDate =
+              new Date(delivery.delivered_at);
+
+            if (
+              Number.isNaN(
+                deliveredDate.getTime(),
+              )
+            ) {
+              return false;
+            }
+
+            return (
+              deliveredDate.getFullYear() ===
+                now.getFullYear() &&
+              deliveredDate.getMonth() ===
+                now.getMonth() &&
+              deliveredDate.getDate() ===
+                now.getDate()
+            );
+          });
+
+        setTodayDeliveries(
+          deliveredToday.length,
+        );
+
+        setTodayEarnings(
+          deliveredToday.reduce(
+            (total, delivery) =>
+              total +
+              Number(
+                delivery.driver_amount || 0,
+              ),
+            0,
+          ),
+        );
 
         const activeDelivery =
           myDeliveries.find(delivery =>
@@ -377,7 +430,11 @@ export default function HomeScreen({
 
   async function handleRefresh() {
     setRefreshing(true);
-    await loadDeliveries(false);
+
+    await Promise.all([
+      loadSession(),
+      loadDeliveries(false),
+    ]);
   }
 
   function handleOnlineChange(
@@ -523,6 +580,44 @@ export default function HomeScreen({
                 ? 'GPS RASTREANDO'
                 : 'GPS EM ESPERA'}
             </Text>
+          </View>
+        </View>
+
+        <View style={styles.todayCard}>
+          <View style={styles.todayHeader}>
+            <Text style={styles.todayTitle}>
+              RESUMO DE HOJE
+            </Text>
+
+            <View style={styles.todayLiveBadge}>
+              <Text style={styles.todayLiveText}>
+                AO VIVO
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.todayGrid}>
+            <View style={styles.todayItem}>
+              <Text style={styles.todayLabel}>
+                GANHOS HOJE
+              </Text>
+
+              <Text style={styles.todayMoney}>
+                {formatCurrency(todayEarnings)}
+              </Text>
+            </View>
+
+            <View style={styles.todayDivider} />
+
+            <View style={styles.todayItem}>
+              <Text style={styles.todayLabel}>
+                CORRIDAS HOJE
+              </Text>
+
+              <Text style={styles.todayNumber}>
+                {todayDeliveries}
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -907,6 +1002,80 @@ const styles = StyleSheet.create({
     color: '#C7CDD4',
     fontSize: 10,
     fontWeight: '900',
+  },
+
+  todayCard: {
+    backgroundColor: '#171B20',
+    borderWidth: 1,
+    borderColor: '#2A3037',
+    borderRadius: 20,
+    padding: 17,
+    marginBottom: 14,
+  },
+
+  todayHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+
+  todayTitle: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 1,
+  },
+
+  todayLiveBadge: {
+    backgroundColor: '#10251A',
+    borderWidth: 1,
+    borderColor: '#245A39',
+    borderRadius: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+
+  todayLiveText: {
+    color: '#52E28A',
+    fontSize: 9,
+    fontWeight: '900',
+  },
+
+  todayGrid: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  todayItem: {
+    flex: 1,
+  },
+
+  todayDivider: {
+    width: 1,
+    height: 48,
+    backgroundColor: '#30363D',
+    marginHorizontal: 16,
+  },
+
+  todayLabel: {
+    color: '#808A94',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+
+  todayMoney: {
+    color: '#52E28A',
+    fontSize: 24,
+    fontWeight: '900',
+    marginTop: 5,
+  },
+
+  todayNumber: {
+    color: '#FF7A16',
+    fontSize: 27,
+    fontWeight: '900',
+    marginTop: 3,
   },
 
   walletCard: {

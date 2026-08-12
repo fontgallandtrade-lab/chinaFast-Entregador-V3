@@ -24,6 +24,9 @@ export type Delivery = {
   estimated_duration_minutes?: number | null;
   payment_method?: string | null;
   status: string;
+  accepted_at?: string | null;
+  picked_up_at?: string | null;
+  delivered_at?: string | null;
   created_at?: string;
 
   pickup_street: string;
