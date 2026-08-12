@@ -719,6 +719,30 @@ export default function HomeScreen({
               </Text>
             </View>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.85}
+            style={styles.quickCard}
+            onPress={() =>
+              navigation.navigate('History')
+            }
+          >
+            <View style={styles.quickIcon}>
+              <Text style={styles.quickIconText}>
+                H
+              </Text>
+            </View>
+
+            <View style={styles.quickTextContainer}>
+              <Text style={styles.quickCardTitle}>
+                Histórico
+              </Text>
+
+              <Text style={styles.quickCardSubtitle}>
+                Corridas concluídas
+              </Text>
+            </View>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.sectionHeader}>
@@ -1210,12 +1234,14 @@ const styles = StyleSheet.create({
 
   quickGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 10,
     marginBottom: 24,
   },
 
   quickCard: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: '47%',
     minHeight: 82,
     backgroundColor: '#171B20',
     borderWidth: 1,

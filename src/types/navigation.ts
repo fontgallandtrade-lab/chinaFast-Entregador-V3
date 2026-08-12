@@ -15,6 +15,8 @@ export type RootStackParamList = {
 
   Wallet: undefined;
 
+  History: undefined;
+
   Order: {
     delivery: Delivery;
   };

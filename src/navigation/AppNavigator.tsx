@@ -20,6 +20,7 @@ import RegisterDriverScreen from '../screens/RegisterDriverScreen';
 import DriverDocumentsScreen from '../screens/DriverDocumentsScreen';
 import HomeScreen from '../screens/HomeScreen';
 import WalletScreen from '../screens/WalletScreen';
+import HistoryScreen from '../screens/HistoryScreen';
 import OrderScreen from '../screens/OrderScreen';
 import PickupScreen from '../screens/PickupScreen';
 import ValidatePickupScreen from '../screens/ValidatePickupScreen';
@@ -228,6 +229,25 @@ export default function AppNavigator() {
               'Carteira',
           }}
         />
+
+    <Stack.Screen
+      name="History"
+      component={
+        HistoryScreen
+      }
+      options={{
+        title:
+          'Histórico',
+
+        headerStyle: {
+          backgroundColor:
+            '#0B0D10',
+        },
+
+        headerTintColor:
+          '#FFFFFF',
+      }}
+    />
 
         <Stack.Screen
           name="Order"
