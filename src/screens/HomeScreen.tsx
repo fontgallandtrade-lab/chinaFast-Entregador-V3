@@ -34,6 +34,7 @@ import { pushService } from '../services/push';
 import {
   startDriverLocationTracking,
   stopDriverLocationTracking,
+  isDriverLocationTracking,
 } from '../services/location';
 
 import {
@@ -112,6 +113,9 @@ export default function HomeScreen({
   const [socketConnected, setSocketConnected] =
     useState(false);
 
+  const [gpsTracking, setGpsTracking] =
+    useState(false);
+
   const loadSession = useCallback(
     async () => {
       const session =
@@ -153,14 +157,20 @@ export default function HomeScreen({
             deliveryId: activeDelivery.id,
           });
 
+          setGpsTracking(
+            isDriverLocationTracking(),
+          );
+
           console.log(
             '[location] Rastreamento retomado para a entrega:',
             activeDelivery.id,
           );
         } else {
           await stopDriverLocationTracking();
+          setGpsTracking(false);
         }
       } catch (trackingError) {
+        setGpsTracking(false);
         console.log(
           '[location] Não foi possível retomar o rastreamento:',
           trackingError instanceof Error
@@ -496,6 +506,22 @@ export default function HomeScreen({
               {socketConnected
                 ? 'SERVIDOR CONECTADO'
                 : 'SERVIDOR DESCONECTADO'}
+            </Text>
+          </View>
+
+          <View style={styles.connectionItem}>
+            <View
+              style={[
+                styles.connectionDot,
+                gpsTracking
+                  ? styles.connectionDotActive
+                  : styles.connectionDotInactive,
+              ]}
+            />
+            <Text style={styles.connectionText}>
+              {gpsTracking
+                ? 'GPS RASTREANDO'
+                : 'GPS EM ESPERA'}
             </Text>
           </View>
         </View>
