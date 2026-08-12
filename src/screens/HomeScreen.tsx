@@ -667,6 +667,60 @@ export default function HomeScreen({
           </Text>
         </TouchableOpacity>
 
+        <Text style={styles.quickTitle}>
+          ACESSO RÁPIDO
+        </Text>
+
+        <View style={styles.quickGrid}>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            style={styles.quickCard}
+            onPress={() =>
+              navigation.navigate('Wallet')
+            }
+          >
+            <View style={styles.quickIcon}>
+              <Text style={styles.quickIconText}>
+                R$
+              </Text>
+            </View>
+
+            <View style={styles.quickTextContainer}>
+              <Text style={styles.quickCardTitle}>
+                Carteira
+              </Text>
+
+              <Text style={styles.quickCardSubtitle}>
+                Saldo e saques
+              </Text>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.85}
+            style={styles.quickCard}
+            onPress={() =>
+              navigation.navigate('DriverDocuments')
+            }
+          >
+            <View style={styles.quickIcon}>
+              <Text style={styles.quickIconText}>
+                DOC
+              </Text>
+            </View>
+
+            <View style={styles.quickTextContainer}>
+              <Text style={styles.quickCardTitle}>
+                Documentos
+              </Text>
+
+              <Text style={styles.quickCardSubtitle}>
+                Cadastro e análise
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>
             Corridas disponíveis
@@ -1144,6 +1198,64 @@ const styles = StyleSheet.create({
     color: '#FF6A00',
     fontSize: 36,
     fontWeight: '300',
+  },
+
+  quickTitle: {
+    color: '#8B949E',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 1.2,
+    marginBottom: 10,
+  },
+
+  quickGrid: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 24,
+  },
+
+  quickCard: {
+    flex: 1,
+    minHeight: 82,
+    backgroundColor: '#171B20',
+    borderWidth: 1,
+    borderColor: '#2A3037',
+    borderRadius: 17,
+    padding: 13,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  quickIcon: {
+    width: 39,
+    height: 39,
+    borderRadius: 12,
+    backgroundColor: '#242A31',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+
+  quickIconText: {
+    color: '#FF7A16',
+    fontSize: 11,
+    fontWeight: '900',
+  },
+
+  quickTextContainer: {
+    flex: 1,
+  },
+
+  quickCardTitle: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '900',
+  },
+
+  quickCardSubtitle: {
+    color: '#7E8791',
+    fontSize: 10,
+    marginTop: 3,
   },
 
   statusCard: {
