@@ -30,6 +30,7 @@ import {
 import { authService } from '../services/auth';
 import { deliveryService } from '../services/delivery';
 import { pushService } from '../services/push';
+import { walletService } from '../services/wallet';
 
 import {
   startDriverLocationTracking,
@@ -122,6 +123,9 @@ export default function HomeScreen({
   const [todayDeliveries, setTodayDeliveries] =
     useState(0);
 
+  const [availableBalance, setAvailableBalance] =
+    useState(0);
+
   const loadSession = useCallback(
     async () => {
       const session =
@@ -144,6 +148,22 @@ export default function HomeScreen({
       try {
         const myDeliveries =
           await deliveryService.getMine();
+
+        try {
+          const wallet =
+            await walletService.getWallet();
+
+          setAvailableBalance(
+            Number(wallet.available_balance || 0),
+          );
+        } catch (walletError) {
+          console.log(
+            '[wallet] Não foi possível carregar o saldo:',
+            walletError instanceof Error
+              ? walletError.message
+              : walletError,
+          );
+        }
 
         const now = new Date();
 
@@ -628,13 +648,17 @@ export default function HomeScreen({
             navigation.navigate('Wallet')
           }
         >
-          <View>
+          <View style={styles.walletContent}>
             <Text style={styles.walletLabel}>
-              CARTEIRA DIGITAL
+              SALDO DISPONÍVEL
+            </Text>
+
+            <Text style={styles.walletBalance}>
+              {formatCurrency(availableBalance)}
             </Text>
 
             <Text style={styles.walletTitle}>
-              Saldo, ganhos e saques
+              Carteira, ganhos e saques
             </Text>
           </View>
 
@@ -1089,6 +1113,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 24,
+  },
+
+  walletContent: {
+    flex: 1,
+  },
+
+  walletBalance: {
+    color: '#52E28A',
+    fontSize: 26,
+    fontWeight: '900',
+    marginTop: 4,
   },
 
   walletLabel: {
