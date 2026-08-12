@@ -109,6 +109,9 @@ export default function HomeScreen({
   const [error, setError] =
     useState<string | null>(null);
 
+  const [socketConnected, setSocketConnected] =
+    useState(false);
+
   const loadSession = useCallback(
     async () => {
       const session =
@@ -301,6 +304,16 @@ export default function HomeScreen({
 
         activeSocket = socket;
 
+        setSocketConnected(socket.connected);
+
+        socket.on('connect', () => {
+          setSocketConnected(true);
+        });
+
+        socket.on('disconnect', () => {
+          setSocketConnected(false);
+        });
+
         socket.on(
           'delivery-offer-created',
           refreshAvailableDeliveries,
@@ -324,6 +337,11 @@ export default function HomeScreen({
 
     return () => {
       cancelled = true;
+
+      setSocketConnected(false);
+
+      activeSocket?.off('connect');
+      activeSocket?.off('disconnect');
 
       activeSocket?.off(
         'delivery-offer-created',
@@ -448,6 +466,38 @@ export default function HomeScreen({
             }}
             thumbColor="#FFFFFF"
           />
+        </View>
+
+        <View style={styles.connectionRow}>
+          <View style={styles.connectionItem}>
+            <View
+              style={[
+                styles.connectionDot,
+                isOnline
+                  ? styles.connectionDotActive
+                  : styles.connectionDotInactive,
+              ]}
+            />
+            <Text style={styles.connectionText}>
+              {isOnline ? 'ONLINE' : 'OFFLINE'}
+            </Text>
+          </View>
+
+          <View style={styles.connectionItem}>
+            <View
+              style={[
+                styles.connectionDot,
+                socketConnected
+                  ? styles.connectionDotActive
+                  : styles.connectionDotInactive,
+              ]}
+            />
+            <Text style={styles.connectionText}>
+              {socketConnected
+                ? 'SERVIDOR CONECTADO'
+                : 'SERVIDOR DESCONECTADO'}
+            </Text>
+          </View>
         </View>
 
         <TouchableOpacity
@@ -791,6 +841,45 @@ const styles = StyleSheet.create({
   avatarText: {
     color: '#FFFFFF',
     fontSize: 20,
+    fontWeight: '900',
+  },
+
+  connectionRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: 14,
+  },
+
+  connectionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#171B20',
+    borderWidth: 1,
+    borderColor: '#2A3037',
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 11,
+  },
+
+  connectionDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 7,
+  },
+
+  connectionDotActive: {
+    backgroundColor: '#48B96D',
+  },
+
+  connectionDotInactive: {
+    backgroundColor: '#777777',
+  },
+
+  connectionText: {
+    color: '#C7CDD4',
+    fontSize: 10,
     fontWeight: '900',
   },
 
