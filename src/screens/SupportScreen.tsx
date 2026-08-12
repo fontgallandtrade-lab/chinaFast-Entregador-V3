@@ -61,7 +61,7 @@ export default function SupportScreen() {
 
           <View style={styles.statusContent}>
             <Text style={styles.statusLabel}>
-              CENTRAL TATURANA EXPRESS
+              CENTRAL CHINAFAST
             </Text>
 
             <Text style={styles.statusText}>
@@ -120,7 +120,7 @@ export default function SupportScreen() {
         </View>
 
         <Text style={styles.versionText}>
-          Taturana Express • Entregador Premium
+          ChinaFast • Entregador Premium
         </Text>
       </ScrollView>
     </SafeAreaView>

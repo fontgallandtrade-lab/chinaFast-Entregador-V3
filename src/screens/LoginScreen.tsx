@@ -171,7 +171,7 @@ export default function LoginScreen({
           <Text
             style={styles.title}
           >
-            Taturana Express
+            ChinaFast
           </Text>
 
           <Text

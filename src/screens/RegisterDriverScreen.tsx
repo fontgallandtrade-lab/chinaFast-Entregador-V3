@@ -634,7 +634,7 @@ export default function RegisterDriverScreen({
 
       Alert.alert(
         'Cadastro enviado',
-        'Cadastro e documentos enviados com sucesso. Agora aguarde a análise da Taturana Express.',
+        'Cadastro e documentos enviados com sucesso. Agora aguarde a análise da ChinaFast.',
         [
           {
             text: 'OK',
@@ -859,7 +859,7 @@ export default function RegisterDriverScreen({
                 styles.subtitle
               }
             >
-              Taturana Express
+              ChinaFast
             </Text>
 
             <Text
@@ -1286,7 +1286,7 @@ export default function RegisterDriverScreen({
                 os documentos ficarão
                 pendentes até a
                 aprovação da
-                Taturana Express.
+                ChinaFast.
               </Text>
             </View>
 

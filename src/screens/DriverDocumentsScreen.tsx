@@ -913,7 +913,7 @@ export default function DriverDocumentsScreen({
             styles.subtitle
           }
         >
-          Taturana Express
+          ChinaFast
         </Text>
 
         <Text
