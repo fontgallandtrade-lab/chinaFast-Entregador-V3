@@ -19,6 +19,8 @@ export type RootStackParamList = {
 
   Support: undefined;
 
+  Profile: undefined;
+
   Order: {
     delivery: Delivery;
   };

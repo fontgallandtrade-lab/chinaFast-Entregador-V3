@@ -22,6 +22,7 @@ import HomeScreen from '../screens/HomeScreen';
 import WalletScreen from '../screens/WalletScreen';
 import HistoryScreen from '../screens/HistoryScreen';
 import SupportScreen from '../screens/SupportScreen';
+import ProfileScreen from '../screens/ProfileScreen';
 import OrderScreen from '../screens/OrderScreen';
 import PickupScreen from '../screens/PickupScreen';
 import ValidatePickupScreen from '../screens/ValidatePickupScreen';
@@ -258,6 +259,25 @@ export default function AppNavigator() {
       options={{
         title:
           'Suporte',
+
+        headerStyle: {
+          backgroundColor:
+            '#0B0D10',
+        },
+
+        headerTintColor:
+          '#FFFFFF',
+      }}
+    />
+
+    <Stack.Screen
+      name="Profile"
+      component={
+        ProfileScreen
+      }
+      options={{
+        title:
+          'Perfil',
 
         headerStyle: {
           backgroundColor:
