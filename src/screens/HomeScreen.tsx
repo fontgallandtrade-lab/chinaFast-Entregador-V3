@@ -145,9 +145,7 @@ export default function HomeScreen({
           );
 
         if (activeDelivery) {
-          connectDriverSocket(driverId);
-
-          await startDriverLocationTracking({
+      await startDriverLocationTracking({
             driverId,
             deliveryId: activeDelivery.id,
           });
@@ -278,30 +276,61 @@ export default function HomeScreen({
       return;
     }
 
-    const socket =
-      connectDriverSocket(driverId);
+    let cancelled = false;
+    let activeSocket:
+      Awaited<
+        ReturnType<
+          typeof connectDriverSocket
+        >
+      > | null = null;
 
     function refreshAvailableDeliveries() {
       loadDeliveries(false);
     }
 
-    socket.on(
-      'delivery-offer-created',
-      refreshAvailableDeliveries,
-    );
+    async function connectSocket() {
+      try {
+        const socket =
+          await connectDriverSocket(
+            Number(driverId),
+          );
 
-    socket.on(
-      'delivery-status-updated',
-      refreshAvailableDeliveries,
-    );
+        if (cancelled) {
+          return;
+        }
+
+        activeSocket = socket;
+
+        socket.on(
+          'delivery-offer-created',
+          refreshAvailableDeliveries,
+        );
+
+        socket.on(
+          'delivery-status-updated',
+          refreshAvailableDeliveries,
+        );
+      } catch (socketError) {
+        console.log(
+          '[socket] Não foi possível conectar:',
+          socketError instanceof Error
+            ? socketError.message
+            : socketError,
+        );
+      }
+    }
+
+    void connectSocket();
 
     return () => {
-      socket.off(
+      cancelled = true;
+
+      activeSocket?.off(
         'delivery-offer-created',
         refreshAvailableDeliveries,
       );
 
-      socket.off(
+      activeSocket?.off(
         'delivery-status-updated',
         refreshAvailableDeliveries,
       );
@@ -357,8 +386,8 @@ export default function HomeScreen({
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar
-        barStyle="dark-content"
-        backgroundColor="#F3F5F7"
+        barStyle="light-content"
+        backgroundColor="#0B0D10"
       />
 
       <ScrollView
@@ -714,13 +743,13 @@ export default function HomeScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F3F5F7',
+    backgroundColor: '#0B0D10',
   },
 
   content: {
     paddingHorizontal: 18,
     paddingTop: 18,
-    paddingBottom: 40,
+    paddingBottom: 48,
   },
 
   header: {
@@ -736,24 +765,27 @@ const styles = StyleSheet.create({
   },
 
   greeting: {
-    color: '#666666',
-    fontSize: 15,
+    color: '#9AA2AC',
+    fontSize: 14,
+    fontWeight: '700',
   },
 
   title: {
-    color: '#171717',
-    fontSize: 23,
+    color: '#FFFFFF',
+    fontSize: 24,
     fontWeight: '900',
-    marginTop: 3,
+    marginTop: 4,
   },
 
   avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
+    width: 50,
+    height: 50,
+    borderRadius: 17,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#FF6A00',
+    borderWidth: 1,
+    borderColor: '#FF8A38',
   },
 
   avatarText: {
@@ -763,10 +795,12 @@ const styles = StyleSheet.create({
   },
 
   walletCard: {
-    minHeight: 82,
+    minHeight: 88,
     borderRadius: 20,
     paddingHorizontal: 18,
-    backgroundColor: '#171717',
+    backgroundColor: '#171B20',
+    borderWidth: 1,
+    borderColor: '#2A3037',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -774,53 +808,58 @@ const styles = StyleSheet.create({
   },
 
   walletLabel: {
-    color: '#FF8A38',
-    fontSize: 11,
+    color: '#FF7A16',
+    fontSize: 10,
     fontWeight: '900',
+    letterSpacing: 1.2,
   },
 
   walletTitle: {
     color: '#FFFFFF',
     fontSize: 17,
     fontWeight: '900',
-    marginTop: 4,
+    marginTop: 5,
   },
 
   walletArrow: {
-    color: '#FFFFFF',
-    fontSize: 34,
+    color: '#FF6A00',
+    fontSize: 36,
     fontWeight: '300',
   },
 
   statusCard: {
-    minHeight: 86,
+    minHeight: 88,
     borderRadius: 20,
     paddingHorizontal: 18,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 26,
+    marginBottom: 14,
+    borderWidth: 1,
   },
 
   statusOnline: {
-    backgroundColor: '#E9F8EE',
+    backgroundColor: '#10231A',
+    borderColor: '#235C3A',
   },
 
   statusOffline: {
-    backgroundColor: '#EBEDF0',
+    backgroundColor: '#181B1F',
+    borderColor: '#30353B',
   },
 
   statusLabel: {
-    color: '#606060',
-    fontSize: 13,
-    fontWeight: '600',
+    color: '#8B949E',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1,
   },
 
   statusText: {
-    color: '#171717',
+    color: '#5CE695',
     fontSize: 18,
     fontWeight: '900',
-    marginTop: 4,
+    marginTop: 5,
   },
 
   sectionHeader: {
@@ -828,61 +867,68 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 13,
+    marginTop: 7,
   },
 
   sectionTitle: {
-    color: '#1C1C1C',
+    color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '900',
   },
 
   totalBadge: {
-    minWidth: 30,
-    height: 30,
-    borderRadius: 15,
+    minWidth: 31,
+    height: 31,
+    borderRadius: 16,
     paddingHorizontal: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFF0E5',
+    backgroundColor: '#332014',
+    borderWidth: 1,
+    borderColor: '#6A3613',
   },
 
   totalText: {
-    color: '#FF6A00',
-    fontSize: 15,
+    color: '#FF7A16',
+    fontSize: 14,
     fontWeight: '900',
   },
 
   loadingCard: {
     minHeight: 180,
     borderRadius: 22,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#15191E',
+    borderWidth: 1,
+    borderColor: '#292F36',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
   },
 
   loadingText: {
-    color: '#666666',
+    color: '#8C949D',
     marginTop: 14,
     fontSize: 14,
   },
 
   emptyCard: {
     borderRadius: 22,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#15191E',
+    borderWidth: 1,
+    borderColor: '#292F36',
     padding: 25,
     alignItems: 'center',
   },
 
   emptyTitle: {
-    color: '#202020',
+    color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '900',
     textAlign: 'center',
   },
 
   emptyText: {
-    color: '#777777',
+    color: '#818A94',
     fontSize: 14,
     lineHeight: 21,
     textAlign: 'center',
@@ -891,18 +937,20 @@ const styles = StyleSheet.create({
 
   errorCard: {
     borderRadius: 22,
-    backgroundColor: '#FFF1F1',
+    backgroundColor: '#251414',
+    borderWidth: 1,
+    borderColor: '#633030',
     padding: 22,
   },
 
   errorTitle: {
-    color: '#A72B2B',
+    color: '#FF8585',
     fontSize: 17,
     fontWeight: '900',
   },
 
   errorText: {
-    color: '#7B4545',
+    color: '#C99A9A',
     fontSize: 14,
     lineHeight: 20,
     marginTop: 7,
@@ -911,7 +959,7 @@ const styles = StyleSheet.create({
   retryButton: {
     height: 46,
     borderRadius: 13,
-    backgroundColor: '#A72B2B',
+    backgroundColor: '#B23A3A',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 16,
@@ -924,18 +972,20 @@ const styles = StyleSheet.create({
   },
 
   orderCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#15191E',
     borderRadius: 23,
     padding: 18,
     marginBottom: 18,
+    borderWidth: 1,
+    borderColor: '#2B3138',
     elevation: 4,
     shadowColor: '#000000',
     shadowOffset: {
       width: 0,
-      height: 3,
+      height: 4,
     },
-    shadowOpacity: 0.08,
-    shadowRadius: 7,
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
   },
 
   orderTop: {
@@ -966,7 +1016,7 @@ const styles = StyleSheet.create({
 
   orderNumber: {
     flex: 1,
-    color: '#4E4E4E',
+    color: '#8D96A0',
     fontSize: 12,
     fontWeight: '700',
     marginLeft: 10,
@@ -987,13 +1037,13 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: '#228B4E',
+    backgroundColor: '#39C878',
   },
 
   routeLine: {
     width: 2,
     height: 58,
-    backgroundColor: '#D8DDE2',
+    backgroundColor: '#333A43',
   },
 
   deliveryDot: {
@@ -1013,20 +1063,20 @@ const styles = StyleSheet.create({
   },
 
   routeLabel: {
-    color: '#888888',
+    color: '#76808B',
     fontSize: 10,
     fontWeight: '900',
   },
 
   routeName: {
-    color: '#202020',
+    color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '900',
     marginTop: 3,
   },
 
   routeAddress: {
-    color: '#777777',
+    color: '#8B949E',
     fontSize: 13,
     lineHeight: 18,
     marginTop: 3,
@@ -1040,55 +1090,60 @@ const styles = StyleSheet.create({
 
   distanceItem: {
     flex: 1,
-    backgroundColor: '#F4F6F8',
+    backgroundColor: '#101318',
     borderRadius: 13,
+    borderWidth: 1,
+    borderColor: '#292F36',
     paddingVertical: 11,
     paddingHorizontal: 8,
     alignItems: 'center',
   },
 
   distanceLabel: {
-    color: '#777777',
+    color: '#747E88',
     fontSize: 11,
     fontWeight: '700',
   },
 
   distanceValue: {
-    color: '#202020',
+    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '900',
     marginTop: 3,
   },
 
   paymentCard: {
-    backgroundColor: '#EAF8EF',
+    backgroundColor: '#10251A',
+    borderColor: '#245A39',
+    borderWidth: 1,
     borderRadius: 17,
     padding: 17,
     marginTop: 17,
   },
 
   paymentLabel: {
-    color: '#50735B',
-    fontSize: 12,
+    color: '#70A982',
+    fontSize: 11,
     fontWeight: '900',
+    letterSpacing: 0.8,
   },
 
   paymentValue: {
-    color: '#188642',
+    color: '#52E28A',
     fontSize: 30,
     fontWeight: '900',
     marginTop: 3,
   },
 
   estimatedTime: {
-    color: '#737373',
+    color: '#818A94',
     fontSize: 12,
     marginTop: 10,
     textAlign: 'right',
   },
 
   acceptButton: {
-    height: 54,
+    height: 56,
     borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1100,5 +1155,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '900',
+    letterSpacing: 0.8,
   },
 });
+

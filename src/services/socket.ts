@@ -1,15 +1,48 @@
-import { io, Socket } from 'socket.io-client';
+import {
+  io,
+  Socket,
+} from 'socket.io-client';
+
+import {
+  getToken,
+} from './api';
 
 const SOCKET_URL =
   'https://api.taturanaexpress.com.br';
 
 let socket: Socket | null = null;
-let connectedDriverId: number | null = null;
+
+let connectedDriverId:
+  number | null = null;
+
+async function configureSocketAuth(
+  currentSocket: Socket,
+): Promise<void> {
+  const token =
+    await getToken();
+
+  if (!token) {
+    throw new Error(
+      'Token de autenticação não encontrado.'
+    );
+  }
+
+  currentSocket.auth = {
+    token,
+  };
+}
 
 function joinDriverRoom(
   currentSocket: Socket,
   driverId: number,
 ): void {
+  /*
+   * O driverId continua sendo enviado
+   * por compatibilidade temporária.
+   *
+   * Depois da proteção no backend,
+   * o servidor não confiará nesse ID.
+   */
   currentSocket.emit(
     'join-driver-room',
     driverId,
@@ -22,22 +55,39 @@ function joinDriverRoom(
     },
   );
 
-  connectedDriverId = driverId;
+  connectedDriverId =
+    driverId;
 }
 
-export function getSocket(): Socket {
+export function getSocket():
+Socket {
   if (!socket) {
-    socket = io(SOCKET_URL, {
-      transports: [
-        'polling',
-      ],
-      autoConnect: false,
-      reconnection: true,
-      reconnectionAttempts: Infinity,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      timeout: 15000,
-    });
+    socket = io(
+      SOCKET_URL,
+      {
+        transports: [
+          'polling',
+        ],
+
+        autoConnect:
+          false,
+
+        reconnection:
+          true,
+
+        reconnectionAttempts:
+          Infinity,
+
+        reconnectionDelay:
+          1000,
+
+        reconnectionDelayMax:
+          5000,
+
+        timeout:
+          15000,
+      },
+    );
 
     socket.on(
       'connect_error',
@@ -63,31 +113,43 @@ export function getSocket(): Socket {
   return socket;
 }
 
-export function connectDriverSocket(
+export async function connectDriverSocket(
   driverId: number,
-): Socket {
-  const currentSocket = getSocket();
+): Promise<Socket> {
+  const currentSocket =
+    getSocket();
+
+  await configureSocketAuth(
+    currentSocket,
+  );
 
   console.log(
     '[socket] iniciando conexão para driver:',
     driverId,
   );
 
-  currentSocket.off('connect');
+  currentSocket.off(
+    'connect',
+  );
 
-  currentSocket.on('connect', () => {
-    console.log(
-      '[socket] conectado:',
-      currentSocket.id,
-    );
+  currentSocket.on(
+    'connect',
+    () => {
+      console.log(
+        '[socket] conectado:',
+        currentSocket.id,
+      );
 
-    joinDriverRoom(
-      currentSocket,
-      driverId,
-    );
-  });
+      joinDriverRoom(
+        currentSocket,
+        driverId,
+      );
+    },
+  );
 
-  if (currentSocket.connected) {
+  if (
+    currentSocket.connected
+  ) {
     joinDriverRoom(
       currentSocket,
       driverId,
@@ -99,13 +161,17 @@ export function connectDriverSocket(
   return currentSocket;
 }
 
-export function setDriverOnline(
+export async function setDriverOnline(
   driverId: number,
-): void {
+): Promise<void> {
   const currentSocket =
-    connectDriverSocket(driverId);
+    await connectDriverSocket(
+      driverId,
+    );
 
-  if (currentSocket.connected) {
+  if (
+    currentSocket.connected
+  ) {
     currentSocket.emit(
       'driver-online',
       {
@@ -130,7 +196,8 @@ export function setDriverOffline(
   );
 }
 
-export function disconnectDriverSocket(): void {
+export function disconnectDriverSocket():
+void {
   if (!socket) {
     return;
   }
@@ -142,7 +209,8 @@ export function disconnectDriverSocket(): void {
     socket.emit(
       'driver-offline',
       {
-        driverId: connectedDriverId,
+        driverId:
+          connectedDriverId,
       },
     );
   }

@@ -116,7 +116,9 @@ export async function startDriverLocationTracking({
   activeDeliveryId = deliveryId;
 
   trackingSocket =
-    connectDriverSocket(driverId);
+    await connectDriverSocket(
+      driverId,
+    );
 
   console.log(
     '[location] Obtendo posição inicial...',
