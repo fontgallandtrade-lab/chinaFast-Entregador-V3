@@ -40,3 +40,8 @@ yarn-error.*
 /ios
 /android
 app.json.backup-firebase-*
+
+# Backups locais
+*.backup-*
+*.backup*
+*.bak*
