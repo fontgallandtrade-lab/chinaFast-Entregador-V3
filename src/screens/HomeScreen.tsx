@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 
 import { useFocusEffect } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type {
   NativeStackScreenProps,
@@ -93,6 +94,7 @@ function formatAddress(
 export default function HomeScreen({
   navigation,
 }: Props) {
+  const insets = useSafeAreaInsets();
   const [isOnline, setIsOnline] =
     useState(true);
 
@@ -490,10 +492,7 @@ export default function HomeScreen({
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar
-        barStyle="light-content"
-        backgroundColor="#0B0D10"
-      />
+      <StatusBar barStyle="light-content" backgroundColor="#0B0D10" />
 
       <ScrollView
         contentContainerStyle={styles.content}
@@ -508,1159 +507,337 @@ export default function HomeScreen({
       >
         <View style={styles.header}>
           <View style={styles.headerText}>
-            <Text style={styles.greeting}>
-              Olá, {firstName}
-            </Text>
-
-            <Text style={styles.title}>
-              Pronto para trabalhar?
-            </Text>
+            <Text style={styles.brand}>TATURANA ENTREGADOR</Text>
+            <Text style={styles.greeting}>Olá, {firstName}</Text>
           </View>
-
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {initial}
-            </Text>
-          </View>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            style={styles.avatar}
+            onPress={() => navigation.navigate('Profile')}
+          >
+            <Text style={styles.avatarText}>{initial}</Text>
+          </TouchableOpacity>
         </View>
 
-        <View
-          style={[
-            styles.statusCard,
-            isOnline
-              ? styles.statusOnline
-              : styles.statusOffline,
-          ]}
-        >
-          <View>
-            <Text style={styles.statusLabel}>
-              Seu status
-            </Text>
-
-            <Text style={styles.statusText}>
-              {isOnline
-                ? 'Você está online'
-                : 'Você está offline'}
-            </Text>
+        <View style={styles.statusBar}>
+          <View style={styles.statusInfo}>
+            <View style={[styles.statusDot, isOnline ? styles.dotOnline : styles.dotOffline]} />
+            <View>
+              <Text style={styles.statusTitle}>{isOnline ? 'Online' : 'Offline'}</Text>
+              <Text style={styles.statusMeta}>
+                {socketConnected ? 'Servidor conectado' : 'Servidor em espera'} · {gpsTracking ? 'GPS ativo' : 'GPS em espera'}
+              </Text>
+            </View>
           </View>
-
           <Switch
             value={isOnline}
             onValueChange={handleOnlineChange}
-            trackColor={{
-              false: '#B5B5B5',
-              true: '#48B96D',
-            }}
+            trackColor={{ false: '#343A40', true: '#238C50' }}
             thumbColor="#FFFFFF"
           />
         </View>
 
-        <View style={styles.connectionRow}>
-          <View style={styles.connectionItem}>
-            <View
-              style={[
-                styles.connectionDot,
-                isOnline
-                  ? styles.connectionDotActive
-                  : styles.connectionDotInactive,
-              ]}
-            />
-            <Text style={styles.connectionText}>
-              {isOnline ? 'ONLINE' : 'OFFLINE'}
-            </Text>
-          </View>
-
-          <View style={styles.connectionItem}>
-            <View
-              style={[
-                styles.connectionDot,
-                socketConnected
-                  ? styles.connectionDotActive
-                  : styles.connectionDotInactive,
-              ]}
-            />
-            <Text style={styles.connectionText}>
-              {socketConnected
-                ? 'SERVIDOR CONECTADO'
-                : 'SERVIDOR DESCONECTADO'}
-            </Text>
-          </View>
-
-          <View style={styles.connectionItem}>
-            <View
-              style={[
-                styles.connectionDot,
-                gpsTracking
-                  ? styles.connectionDotActive
-                  : styles.connectionDotInactive,
-              ]}
-            />
-            <Text style={styles.connectionText}>
-              {gpsTracking
-                ? 'GPS RASTREANDO'
-                : 'GPS EM ESPERA'}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.todayCard}>
-          <View style={styles.todayHeader}>
-            <Text style={styles.todayTitle}>
-              RESUMO DE HOJE
-            </Text>
-
-            <View style={styles.todayLiveBadge}>
-              <Text style={styles.todayLiveText}>
-                AO VIVO
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.todayGrid}>
-            <View style={styles.todayItem}>
-              <Text style={styles.todayLabel}>
-                GANHOS HOJE
-              </Text>
-
-              <Text style={styles.todayMoney}>
-                {formatCurrency(todayEarnings)}
-              </Text>
-            </View>
-
-            <View style={styles.todayDivider} />
-
-            <View style={styles.todayItem}>
-              <Text style={styles.todayLabel}>
-                CORRIDAS HOJE
-              </Text>
-
-              <Text style={styles.todayNumber}>
-                {todayDeliveries}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        <TouchableOpacity
-          activeOpacity={0.85}
-          style={styles.walletCard}
-          onPress={() =>
-            navigation.navigate('Wallet')
-          }
-        >
-          <View style={styles.walletContent}>
-            <Text style={styles.walletLabel}>
-              SALDO DISPONÍVEL
-            </Text>
-
-            <Text style={styles.walletBalance}>
-              {formatCurrency(availableBalance)}
-            </Text>
-
-            <Text style={styles.walletTitle}>
-              Carteira, ganhos e saques
-            </Text>
-          </View>
-
-          <Text style={styles.walletArrow}>
-            ›
-          </Text>
-        </TouchableOpacity>
-
-        <Text style={styles.quickTitle}>
-          ACESSO RÁPIDO
-        </Text>
-
-        <View style={styles.quickGrid}>
-          <TouchableOpacity
-            activeOpacity={0.85}
-            style={styles.quickCard}
-            onPress={() =>
-              navigation.navigate('Wallet')
-            }
-          >
-            <View style={styles.quickIcon}>
-              <Text style={styles.quickIconText}>
-                R$
-              </Text>
-            </View>
-
-            <View style={styles.quickTextContainer}>
-              <Text style={styles.quickCardTitle}>
-                Carteira
-              </Text>
-
-              <Text style={styles.quickCardSubtitle}>
-                Saldo e saques
-              </Text>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            activeOpacity={0.85}
-            style={styles.quickCard}
-            onPress={() =>
-              navigation.navigate('DriverDocuments')
-            }
-          >
-            <View style={styles.quickIcon}>
-              <Text style={styles.quickIconText}>
-                DOC
-              </Text>
-            </View>
-
-            <View style={styles.quickTextContainer}>
-              <Text style={styles.quickCardTitle}>
-                Documentos
-              </Text>
-
-              <Text style={styles.quickCardSubtitle}>
-                Cadastro e análise
-              </Text>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            activeOpacity={0.85}
-            style={styles.quickCard}
-            onPress={() =>
-              navigation.navigate('History')
-            }
-          >
-            <View style={styles.quickIcon}>
-              <Text style={styles.quickIconText}>
-                H
-              </Text>
-            </View>
-
-            <View style={styles.quickTextContainer}>
-              <Text style={styles.quickCardTitle}>
-                Histórico
-              </Text>
-
-              <Text style={styles.quickCardSubtitle}>
-                Corridas concluídas
-              </Text>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            activeOpacity={0.85}
-            style={styles.quickCard}
-            onPress={() =>
-              navigation.navigate('Support')
-            }
-          >
-            <View style={styles.quickIcon}>
-              <Text style={styles.quickIconText}>
-                ?
-              </Text>
-            </View>
-
-            <View style={styles.quickTextContainer}>
-              <Text style={styles.quickCardTitle}>
-                Suporte
-              </Text>
-
-              <Text style={styles.quickCardSubtitle}>
-                Central de ajuda
-              </Text>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            activeOpacity={0.85}
-            style={styles.quickCard}
-            onPress={() =>
-              navigation.navigate('Profile')
-            }
-          >
-            <View style={styles.quickIcon}>
-              <Text style={styles.quickIconText}>
-                EU
-              </Text>
-            </View>
-
-            <View style={styles.quickTextContainer}>
-              <Text style={styles.quickCardTitle}>
-                Perfil
-              </Text>
-
-              <Text style={styles.quickCardSubtitle}>
-                Dados do entregador
-              </Text>
-            </View>
-          </TouchableOpacity>
-        </View>
-
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>
-            Corridas disponíveis
-          </Text>
-
+          <View>
+            <Text style={styles.sectionEyebrow}>TRABALHO</Text>
+            <Text style={styles.sectionTitle}>Corridas disponíveis</Text>
+          </View>
           {isOnline && (
             <View style={styles.totalBadge}>
-              <Text style={styles.totalText}>
-                {deliveries.length}
-              </Text>
+              <Text style={styles.totalText}>{deliveries.length}</Text>
             </View>
           )}
         </View>
 
         {!isOnline ? (
           <View style={styles.emptyCard}>
-            <Text style={styles.emptyTitle}>
-              Você está offline
-            </Text>
-
-            <Text style={styles.emptyText}>
-              Ative seu status para receber
-              novas corridas.
-            </Text>
+            <Text style={styles.emptyTitle}>Você está offline</Text>
+            <Text style={styles.emptyText}>Ative seu status para receber novas corridas.</Text>
           </View>
         ) : loading ? (
           <View style={styles.loadingCard}>
-            <ActivityIndicator
-              size="large"
-              color="#FF6A00"
-            />
-
-            <Text style={styles.loadingText}>
-              Buscando corridas...
-            </Text>
+            <ActivityIndicator size="large" color="#FF6A00" />
+            <Text style={styles.loadingText}>Buscando corridas...</Text>
           </View>
         ) : error ? (
           <View style={styles.errorCard}>
-            <Text style={styles.errorTitle}>
-              Não foi possível atualizar
-            </Text>
-
-            <Text style={styles.errorText}>
-              {error}
-            </Text>
-
-            <TouchableOpacity
-              activeOpacity={0.85}
-              style={styles.retryButton}
-              onPress={() =>
-                loadDeliveries(true)
-              }
-            >
-              <Text
-                style={styles.retryButtonText}
-              >
-                TENTAR NOVAMENTE
-              </Text>
+            <Text style={styles.errorTitle}>Não foi possível atualizar</Text>
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity activeOpacity={0.85} style={styles.retryButton} onPress={() => loadDeliveries(true)}>
+              <Text style={styles.retryButtonText}>TENTAR NOVAMENTE</Text>
             </TouchableOpacity>
           </View>
         ) : deliveries.length === 0 ? (
           <View style={styles.emptyCard}>
-            <Text style={styles.emptyTitle}>
-              Nenhuma corrida disponível
-            </Text>
-
-            <Text style={styles.emptyText}>
-              Continue online. Novas solicitações
-              aparecerão automaticamente.
-            </Text>
+            <Text style={styles.emptyIcon}>✓</Text>
+            <Text style={styles.emptyTitle}>Nenhuma corrida disponível</Text>
+            <Text style={styles.emptyText}>Continue online. Novas solicitações aparecerão automaticamente.</Text>
           </View>
         ) : (
           deliveries.map((delivery) => {
-            const isIntercity =
-              delivery.delivery_type ===
-              'intercity';
-
+            const isIntercity = delivery.delivery_type === 'intercity';
             return (
-              <View
-                key={delivery.id}
-                style={styles.orderCard}
-              >
+              <View key={delivery.id} style={styles.orderCard}>
                 <View style={styles.orderTop}>
-                  <View
-                    style={[
-                      styles.orderBadge,
-                      isIntercity
-                        ? styles.intercityBadge
-                        : styles.urbanBadge,
-                    ]}
-                  >
-                    <Text
-                      style={styles.orderBadgeText}
-                    >
-                      {isIntercity
-                        ? 'INTERMUNICIPAL'
-                        : 'URBANA'}
-                    </Text>
+                  <View style={[styles.orderBadge, isIntercity ? styles.intercityBadge : styles.urbanBadge]}>
+                    <Text style={styles.orderBadgeText}>{isIntercity ? 'INTERMUNICIPAL' : 'URBANA'}</Text>
                   </View>
-
-                  <Text style={styles.orderNumber}>
-                    {delivery.public_code ||
-                      `Pedido #${delivery.id}`}
-                  </Text>
+                  <Text style={styles.orderNumber}>{delivery.public_code || `Pedido #${delivery.id}`}</Text>
                 </View>
 
                 <View style={styles.routeContainer}>
                   <View style={styles.routeIcons}>
                     <View style={styles.pickupDot} />
                     <View style={styles.routeLine} />
-                    <View
-                      style={styles.deliveryDot}
-                    />
+                    <View style={styles.deliveryDot} />
                   </View>
-
-                  <View
-                    style={styles.routeTextContainer}
-                  >
+                  <View style={styles.routeTextContainer}>
                     <View style={styles.routeBlock}>
-                      <Text
-                        style={styles.routeLabel}
-                      >
-                        RETIRADA
-                      </Text>
-
-                      <Text style={styles.routeName}>
-                        {delivery.pickup_city}
-                      </Text>
-
-                      <Text
-                        style={styles.routeAddress}
-                      >
-                        {formatAddress(
-                          delivery.pickup_street,
-                          delivery.pickup_number,
-                          delivery.pickup_neighborhood,
-                        )}
-                      </Text>
+                      <Text style={styles.routeLabel}>RETIRADA</Text>
+                      <Text style={styles.routeName}>{delivery.pickup_city}</Text>
+                      <Text style={styles.routeAddress}>{formatAddress(delivery.pickup_street, delivery.pickup_number, delivery.pickup_neighborhood)}</Text>
                     </View>
-
                     <View style={styles.routeBlock}>
-                      <Text
-                        style={styles.routeLabel}
-                      >
-                        ENTREGA
-                      </Text>
-
-                      <Text style={styles.routeName}>
-                        {delivery.destination_city}
-                      </Text>
-
-                      <Text
-                        style={styles.routeAddress}
-                      >
-                        {formatAddress(
-                          delivery.destination_street,
-                          delivery.destination_number,
-                          delivery.destination_neighborhood,
-                        )}
-                      </Text>
+                      <Text style={styles.routeLabel}>ENTREGA</Text>
+                      <Text style={styles.routeName}>{delivery.destination_city}</Text>
+                      <Text style={styles.routeAddress}>{formatAddress(delivery.destination_street, delivery.destination_number, delivery.destination_neighborhood)}</Text>
                     </View>
                   </View>
                 </View>
 
-                <View style={styles.distanceGrid}>
-                  <View style={styles.distanceItem}>
-                    <Text
-                      style={styles.distanceLabel}
-                    >
-                      Ida
-                    </Text>
-
-                    <Text
-                      style={styles.distanceValue}
-                    >
-                      {formatDistance(
-                        delivery
-                          .distance_outbound_km,
-                      )}
-                    </Text>
+                <View style={styles.tripFooter}>
+                  <View>
+                    <Text style={styles.tripMetaLabel}>DISTÂNCIA</Text>
+                    <Text style={styles.tripMetaValue}>{formatDistance(delivery.distance_total_km)}</Text>
                   </View>
-
-                  {isIntercity && (
-                    <View
-                      style={styles.distanceItem}
-                    >
-                      <Text
-                        style={styles.distanceLabel}
-                      >
-                        Retorno
-                      </Text>
-
-                      <Text
-                        style={styles.distanceValue}
-                      >
-                        {formatDistance(
-                          delivery
-                            .distance_return_km,
-                        )}
-                      </Text>
+                  {delivery.estimated_duration_minutes ? (
+                    <View style={styles.tripMetaRight}>
+                      <Text style={styles.tripMetaLabel}>ESTIMATIVA</Text>
+                      <Text style={styles.tripMetaValue}>{delivery.estimated_duration_minutes} min</Text>
                     </View>
-                  )}
+                  ) : null}
+                </View>
 
-                  <View style={styles.distanceItem}>
-                    <Text
-                      style={styles.distanceLabel}
-                    >
-                      Total
-                    </Text>
-
-                    <Text
-                      style={styles.distanceValue}
-                    >
-                      {formatDistance(
-                        delivery
-                          .distance_total_km,
-                      )}
-                    </Text>
+                <View style={styles.earningRow}>
+                  <View>
+                    <Text style={styles.paymentLabel}>SEU GANHO</Text>
+                    <Text style={styles.paymentValue}>{formatCurrency(delivery.driver_amount)}</Text>
                   </View>
+                  <TouchableOpacity activeOpacity={0.85} style={styles.acceptButton} onPress={() => openOrder(delivery)}>
+                    <Text style={styles.acceptButtonText}>VER PEDIDO</Text>
+                  </TouchableOpacity>
                 </View>
-
-                <View style={styles.paymentCard}>
-                  <Text style={styles.paymentLabel}>
-                    VALOR DA CORRIDA
-                  </Text>
-
-                  <Text style={styles.paymentValue}>
-                    {formatCurrency(
-                      delivery.driver_amount,
-                    )}
-                  </Text>
-                </View>
-
-                {delivery
-                  .estimated_duration_minutes ? (
-                  <Text
-                    style={styles.estimatedTime}
-                  >
-                    Tempo estimado:{' '}
-                    {
-                      delivery
-                        .estimated_duration_minutes
-                    } min
-                  </Text>
-                ) : null}
-
-                <TouchableOpacity
-                  activeOpacity={0.85}
-                  style={styles.acceptButton}
-                  onPress={() =>
-                    openOrder(delivery)
-                  }
-                >
-                  <Text
-                    style={styles.acceptButtonText}
-                  >
-                    VER PEDIDO
-                  </Text>
-                </TouchableOpacity>
               </View>
             );
           })
         )}
+
+        <Text style={styles.blockTitle}>HOJE</Text>
+        <View style={styles.todayCard}>
+          <View style={styles.todayItem}>
+            <Text style={styles.todayLabel}>GANHOS</Text>
+            <Text style={styles.todayMoney}>{formatCurrency(todayEarnings)}</Text>
+          </View>
+          <View style={styles.todayDivider} />
+          <View style={styles.todayItem}>
+            <Text style={styles.todayLabel}>ENTREGAS</Text>
+            <Text style={styles.todayNumber}>{todayDeliveries}</Text>
+          </View>
+        </View>
+
+        <TouchableOpacity activeOpacity={0.85} style={styles.walletCard} onPress={() => navigation.navigate('Wallet')}>
+          <View>
+            <Text style={styles.walletLabel}>SALDO DISPONÍVEL</Text>
+            <Text style={styles.walletBalance}>{formatCurrency(availableBalance)}</Text>
+          </View>
+          <View style={styles.walletAction}>
+            <Text style={styles.walletActionText}>CARTEIRA</Text>
+            <Text style={styles.walletArrow}>›</Text>
+          </View>
+        </TouchableOpacity>
+
+        <Text style={styles.blockTitle}>MAIS</Text>
+        <View style={styles.moreRow}>
+          <TouchableOpacity style={styles.moreButton} onPress={() => navigation.navigate('History')}>
+            <Text style={styles.moreIcon}>H</Text><Text style={styles.moreText}>Histórico</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.moreButton} onPress={() => navigation.navigate('DriverDocuments')}>
+            <Text style={styles.moreIcon}>DOC</Text><Text style={styles.moreText}>Documentos</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.moreButton} onPress={() => navigation.navigate('Support')}>
+            <Text style={styles.moreIcon}>?</Text><Text style={styles.moreText}>Suporte</Text>
+          </TouchableOpacity>
+        </View>
+
       </ScrollView>
+
+      <View
+        style={[
+          styles.bottomNav,
+          {
+            paddingBottom: Math.max(insets.bottom, 12),
+            height: 70 + Math.max(insets.bottom, 12),
+          },
+        ]}
+      >
+        <View style={styles.navItemActive}>
+          <Text style={styles.navIconActive}>●</Text>
+          <Text style={styles.navTextActive}>Início</Text>
+        </View>
+
+        <TouchableOpacity
+          style={styles.navItem}
+          onPress={() => navigation.navigate('History')}
+        >
+          <Text style={styles.navIcon}>H</Text>
+          <Text style={styles.navText}>Corridas</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.navItem}
+          onPress={() => navigation.navigate('Wallet')}
+        >
+          <Text style={styles.navIcon}>R$</Text>
+          <Text style={styles.navText}>Carteira</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.navItem}
+          onPress={() => navigation.navigate('Profile')}
+        >
+          <Text style={styles.navIcon}>EU</Text>
+          <Text style={styles.navText}>Perfil</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0B0D10',
-  },
+  container: { flex: 1, backgroundColor: '#0B0D10' },
+  content: { paddingHorizontal: 18, paddingTop: 14, paddingBottom: 95 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 },
+  headerText: { flex: 1 },
+  brand: { color: '#7F8993', fontSize: 10, fontWeight: '900', letterSpacing: 1.3 },
+  greeting: { color: '#FFFFFF', fontSize: 23, fontWeight: '900', marginTop: 3 },
+  avatar: { width: 43, height: 43, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: '#20262D', borderWidth: 1, borderColor: '#343B44' },
+  avatarText: { color: '#FF7A16', fontSize: 17, fontWeight: '900' },
 
-  content: {
-    paddingHorizontal: 18,
-    paddingTop: 18,
-    paddingBottom: 48,
-  },
+  statusBar: { minHeight: 66, borderRadius: 18, paddingHorizontal: 15, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#121A16', borderWidth: 1, borderColor: '#214E34', marginBottom: 22 },
+  statusInfo: { flex: 1, flexDirection: 'row', alignItems: 'center', paddingRight: 8 },
+  statusDot: { width: 10, height: 10, borderRadius: 5, marginRight: 11 },
+  dotOnline: { backgroundColor: '#52E28A' },
+  dotOffline: { backgroundColor: '#777F87' },
+  statusTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '900' },
+  statusMeta: { color: '#82908A', fontSize: 10, marginTop: 3 },
 
-  header: {
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 12 },
+  sectionEyebrow: { color: '#FF7A16', fontSize: 9, fontWeight: '900', letterSpacing: 1.2, marginBottom: 3 },
+  sectionTitle: { color: '#FFFFFF', fontSize: 21, fontWeight: '900' },
+  totalBadge: { minWidth: 31, height: 31, borderRadius: 16, paddingHorizontal: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: '#332014', borderWidth: 1, borderColor: '#6A3613' },
+  totalText: { color: '#FF7A16', fontSize: 14, fontWeight: '900' },
+
+  loadingCard: { minHeight: 145, borderRadius: 20, backgroundColor: '#15191E', borderWidth: 1, borderColor: '#292F36', alignItems: 'center', justifyContent: 'center', padding: 22, marginBottom: 22 },
+  loadingText: { color: '#8C949D', marginTop: 12, fontSize: 13 },
+  emptyCard: { minHeight: 145, borderRadius: 20, backgroundColor: '#15191E', borderWidth: 1, borderColor: '#292F36', padding: 22, alignItems: 'center', justifyContent: 'center', marginBottom: 22 },
+  emptyIcon: { color: '#52E28A', fontSize: 22, fontWeight: '900', marginBottom: 7 },
+  emptyTitle: { color: '#FFFFFF', fontSize: 17, fontWeight: '900', textAlign: 'center' },
+  emptyText: { color: '#818A94', fontSize: 13, lineHeight: 19, textAlign: 'center', marginTop: 7 },
+  errorCard: { borderRadius: 20, backgroundColor: '#251414', borderWidth: 1, borderColor: '#633030', padding: 20, marginBottom: 22 },
+  errorTitle: { color: '#FF8585', fontSize: 16, fontWeight: '900' },
+  errorText: { color: '#C99A9A', fontSize: 13, lineHeight: 19, marginTop: 7 },
+  retryButton: { height: 44, borderRadius: 12, backgroundColor: '#B23A3A', alignItems: 'center', justifyContent: 'center', marginTop: 14 },
+  retryButtonText: { color: '#FFFFFF', fontSize: 12, fontWeight: '900' },
+
+  orderCard: { backgroundColor: '#15191E', borderRadius: 22, padding: 17, marginBottom: 14, borderWidth: 1, borderColor: '#2B3138' },
+  orderTop: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
+  orderBadge: { borderRadius: 8, paddingVertical: 5, paddingHorizontal: 9 },
+  urbanBadge: { backgroundColor: '#228B4E' },
+  intercityBadge: { backgroundColor: '#FF6A00' },
+  orderBadgeText: { color: '#FFFFFF', fontSize: 9, fontWeight: '900' },
+  orderNumber: { flex: 1, color: '#747E88', fontSize: 10, fontWeight: '700', marginLeft: 10, textAlign: 'right' },
+  routeContainer: { flexDirection: 'row' },
+  routeIcons: { width: 18, alignItems: 'center', paddingTop: 5 },
+  pickupDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#39C878' },
+  routeLine: { width: 2, height: 50, backgroundColor: '#333A43' },
+  deliveryDot: { width: 10, height: 10, borderRadius: 3, backgroundColor: '#FF6A00' },
+  routeTextContainer: { flex: 1, paddingLeft: 11 },
+  routeBlock: { minHeight: 67 },
+  routeLabel: { color: '#76808B', fontSize: 9, fontWeight: '900' },
+  routeName: { color: '#FFFFFF', fontSize: 17, fontWeight: '900', marginTop: 2 },
+  routeAddress: { color: '#8B949E', fontSize: 12, lineHeight: 17, marginTop: 2 },
+  tripFooter: { flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: '#292F36', paddingTop: 12, marginTop: 7 },
+  tripMetaRight: { alignItems: 'flex-end' },
+  tripMetaLabel: { color: '#68727C', fontSize: 9, fontWeight: '900' },
+  tripMetaValue: { color: '#FFFFFF', fontSize: 13, fontWeight: '900', marginTop: 2 },
+  earningRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#10251A', borderColor: '#245A39', borderWidth: 1, borderRadius: 16, padding: 14, marginTop: 13 },
+  paymentLabel: { color: '#70A982', fontSize: 9, fontWeight: '900', letterSpacing: 0.7 },
+  paymentValue: { color: '#52E28A', fontSize: 25, fontWeight: '900', marginTop: 2 },
+  acceptButton: { height: 43, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FF6A00', paddingHorizontal: 16, marginLeft: 10 },
+  acceptButtonText: { color: '#FFFFFF', fontSize: 11, fontWeight: '900', letterSpacing: 0.5 },
+
+  blockTitle: { color: '#7F8993', fontSize: 10, fontWeight: '900', letterSpacing: 1.2, marginTop: 8, marginBottom: 9 },
+  todayCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#15191E', borderWidth: 1, borderColor: '#292F36', borderRadius: 18, padding: 15, marginBottom: 12 },
+  todayItem: { flex: 1 },
+  todayDivider: { width: 1, height: 43, backgroundColor: '#30363D', marginHorizontal: 14 },
+  todayLabel: { color: '#77818B', fontSize: 9, fontWeight: '900' },
+  todayMoney: { color: '#52E28A', fontSize: 21, fontWeight: '900', marginTop: 4 },
+  todayNumber: { color: '#FF7A16', fontSize: 23, fontWeight: '900', marginTop: 2 },
+
+  walletCard: { minHeight: 75, borderRadius: 18, paddingHorizontal: 16, backgroundColor: '#15191E', borderWidth: 1, borderColor: '#292F36', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 15 },
+  walletLabel: { color: '#77818B', fontSize: 9, fontWeight: '900', letterSpacing: 0.8 },
+  walletBalance: { color: '#52E28A', fontSize: 23, fontWeight: '900', marginTop: 3 },
+  walletAction: { flexDirection: 'row', alignItems: 'center' },
+  walletActionText: { color: '#FF7A16', fontSize: 10, fontWeight: '900' },
+  walletArrow: { color: '#FF6A00', fontSize: 28, marginLeft: 7, marginTop: -2 },
+
+  moreRow: { flexDirection: 'row', gap: 8, marginBottom: 18 },
+  moreButton: { flex: 1, minHeight: 59, backgroundColor: '#15191E', borderWidth: 1, borderColor: '#292F36', borderRadius: 15, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
+  moreIcon: { color: '#FF7A16', fontSize: 10, fontWeight: '900', marginBottom: 4 },
+  moreText: { color: '#C9CED4', fontSize: 10, fontWeight: '800' },
+
+  bottomNav: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 22,
-  },
-
-  headerText: {
-    flex: 1,
-    paddingRight: 12,
-  },
-
-  greeting: {
-    color: '#9AA2AC',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-
-  title: {
-    color: '#FFFFFF',
-    fontSize: 24,
-    fontWeight: '900',
-    marginTop: 4,
-  },
-
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 17,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FF6A00',
-    borderWidth: 1,
-    borderColor: '#FF8A38',
-  },
-
-  avatarText: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: '900',
-  },
-
-  connectionRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 14,
-  },
-
-  connectionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#171B20',
-    borderWidth: 1,
-    borderColor: '#2A3037',
-    borderRadius: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 11,
-  },
-
-  connectionDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 7,
-  },
-
-  connectionDotActive: {
-    backgroundColor: '#48B96D',
-  },
-
-  connectionDotInactive: {
-    backgroundColor: '#777777',
-  },
-
-  connectionText: {
-    color: '#C7CDD4',
-    fontSize: 10,
-    fontWeight: '900',
-  },
-
-  todayCard: {
-    backgroundColor: '#171B20',
-    borderWidth: 1,
-    borderColor: '#2A3037',
-    borderRadius: 20,
-    padding: 17,
-    marginBottom: 14,
-  },
-
-  todayHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-
-  todayTitle: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 1,
-  },
-
-  todayLiveBadge: {
-    backgroundColor: '#10251A',
-    borderWidth: 1,
-    borderColor: '#245A39',
-    borderRadius: 8,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-  },
-
-  todayLiveText: {
-    color: '#52E28A',
-    fontSize: 9,
-    fontWeight: '900',
-  },
-
-  todayGrid: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-
-  todayItem: {
-    flex: 1,
-  },
-
-  todayDivider: {
-    width: 1,
-    height: 48,
-    backgroundColor: '#30363D',
-    marginHorizontal: 16,
-  },
-
-  todayLabel: {
-    color: '#808A94',
-    fontSize: 10,
-    fontWeight: '800',
-  },
-
-  todayMoney: {
-    color: '#52E28A',
-    fontSize: 24,
-    fontWeight: '900',
-    marginTop: 5,
-  },
-
-  todayNumber: {
-    color: '#FF7A16',
-    fontSize: 27,
-    fontWeight: '900',
-    marginTop: 3,
-  },
-
-  walletCard: {
-    minHeight: 88,
-    borderRadius: 20,
-    paddingHorizontal: 18,
-    backgroundColor: '#171B20',
-    borderWidth: 1,
-    borderColor: '#2A3037',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 24,
-  },
-
-  walletContent: {
-    flex: 1,
-  },
-
-  walletBalance: {
-    color: '#52E28A',
-    fontSize: 26,
-    fontWeight: '900',
-    marginTop: 4,
-  },
-
-  walletLabel: {
-    color: '#FF7A16',
-    fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 1.2,
-  },
-
-  walletTitle: {
-    color: '#FFFFFF',
-    fontSize: 17,
-    fontWeight: '900',
-    marginTop: 5,
-  },
-
-  walletArrow: {
-    color: '#FF6A00',
-    fontSize: 36,
-    fontWeight: '300',
-  },
-
-  quickTitle: {
-    color: '#8B949E',
-    fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 1.2,
-    marginBottom: 10,
-  },
-
-  quickGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 24,
-  },
-
-  quickCard: {
-    flexGrow: 1,
-    flexBasis: '47%',
-    minHeight: 82,
-    backgroundColor: '#171B20',
-    borderWidth: 1,
-    borderColor: '#2A3037',
-    borderRadius: 17,
-    padding: 13,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-
-  quickIcon: {
-    width: 39,
-    height: 39,
-    borderRadius: 12,
-    backgroundColor: '#242A31',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 10,
-  },
-
-  quickIconText: {
-    color: '#FF7A16',
-    fontSize: 11,
-    fontWeight: '900',
-  },
-
-  quickTextContainer: {
-    flex: 1,
-  },
-
-  quickCardTitle: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '900',
-  },
-
-  quickCardSubtitle: {
-    color: '#7E8791',
-    fontSize: 10,
-    marginTop: 3,
-  },
-
-  statusCard: {
-    minHeight: 88,
-    borderRadius: 20,
-    paddingHorizontal: 18,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 14,
-    borderWidth: 1,
-  },
-
-  statusOnline: {
-    backgroundColor: '#10231A',
-    borderColor: '#235C3A',
-  },
-
-  statusOffline: {
-    backgroundColor: '#181B1F',
-    borderColor: '#30353B',
-  },
-
-  statusLabel: {
-    color: '#8B949E',
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 1,
-  },
-
-  statusText: {
-    color: '#5CE695',
-    fontSize: 18,
-    fontWeight: '900',
-    marginTop: 5,
-  },
-
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 13,
-    marginTop: 7,
-  },
-
-  sectionTitle: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '900',
-  },
-
-  totalBadge: {
-    minWidth: 31,
-    height: 31,
-    borderRadius: 16,
-    paddingHorizontal: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#332014',
-    borderWidth: 1,
-    borderColor: '#6A3613',
-  },
-
-  totalText: {
-    color: '#FF7A16',
-    fontSize: 14,
-    fontWeight: '900',
-  },
-
-  loadingCard: {
-    minHeight: 180,
-    borderRadius: 22,
-    backgroundColor: '#15191E',
-    borderWidth: 1,
-    borderColor: '#292F36',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-  },
-
-  loadingText: {
-    color: '#8C949D',
-    marginTop: 14,
-    fontSize: 14,
-  },
-
-  emptyCard: {
-    borderRadius: 22,
-    backgroundColor: '#15191E',
-    borderWidth: 1,
-    borderColor: '#292F36',
-    padding: 25,
-    alignItems: 'center',
-  },
-
-  emptyTitle: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '900',
-    textAlign: 'center',
-  },
-
-  emptyText: {
-    color: '#818A94',
-    fontSize: 14,
-    lineHeight: 21,
-    textAlign: 'center',
-    marginTop: 8,
-  },
-
-  errorCard: {
-    borderRadius: 22,
-    backgroundColor: '#251414',
-    borderWidth: 1,
-    borderColor: '#633030',
-    padding: 22,
-  },
-
-  errorTitle: {
-    color: '#FF8585',
-    fontSize: 17,
-    fontWeight: '900',
-  },
-
-  errorText: {
-    color: '#C99A9A',
-    fontSize: 14,
-    lineHeight: 20,
-    marginTop: 7,
-  },
-
-  retryButton: {
-    height: 46,
-    borderRadius: 13,
-    backgroundColor: '#B23A3A',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 16,
-  },
-
-  retryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '900',
-  },
-
-  orderCard: {
-    backgroundColor: '#15191E',
-    borderRadius: 23,
-    padding: 18,
-    marginBottom: 18,
-    borderWidth: 1,
-    borderColor: '#2B3138',
-    elevation: 4,
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-  },
-
-  orderTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-
-  orderBadge: {
-    borderRadius: 8,
-    paddingVertical: 6,
+    backgroundColor: '#12161A',
+    borderTopWidth: 1,
+    borderTopColor: '#292F36',
     paddingHorizontal: 10,
+    paddingTop: 8,
   },
-
-  urbanBadge: {
-    backgroundColor: '#228B4E',
-  },
-
-  intercityBadge: {
-    backgroundColor: '#FF6A00',
-  },
-
-  orderBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: '900',
-  },
-
-  orderNumber: {
+  navItem: {
     flex: 1,
-    color: '#8D96A0',
-    fontSize: 12,
-    fontWeight: '700',
-    marginLeft: 10,
-    textAlign: 'right',
-  },
-
-  routeContainer: {
-    flexDirection: 'row',
-  },
-
-  routeIcons: {
-    width: 20,
-    alignItems: 'center',
-    paddingTop: 5,
-  },
-
-  pickupDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#39C878',
-  },
-
-  routeLine: {
-    width: 2,
-    height: 58,
-    backgroundColor: '#333A43',
-  },
-
-  deliveryDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 3,
-    backgroundColor: '#FF6A00',
-  },
-
-  routeTextContainer: {
-    flex: 1,
-    paddingLeft: 12,
-  },
-
-  routeBlock: {
-    minHeight: 76,
-  },
-
-  routeLabel: {
-    color: '#76808B',
-    fontSize: 10,
-    fontWeight: '900',
-  },
-
-  routeName: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '900',
-    marginTop: 3,
-  },
-
-  routeAddress: {
-    color: '#8B949E',
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: 3,
-  },
-
-  distanceGrid: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 14,
-  },
-
-  distanceItem: {
-    flex: 1,
-    backgroundColor: '#101318',
-    borderRadius: 13,
-    borderWidth: 1,
-    borderColor: '#292F36',
-    paddingVertical: 11,
-    paddingHorizontal: 8,
-    alignItems: 'center',
-  },
-
-  distanceLabel: {
-    color: '#747E88',
-    fontSize: 11,
-    fontWeight: '700',
-  },
-
-  distanceValue: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '900',
-    marginTop: 3,
-  },
-
-  paymentCard: {
-    backgroundColor: '#10251A',
-    borderColor: '#245A39',
-    borderWidth: 1,
-    borderRadius: 17,
-    padding: 17,
-    marginTop: 17,
-  },
-
-  paymentLabel: {
-    color: '#70A982',
-    fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-  },
-
-  paymentValue: {
-    color: '#52E28A',
-    fontSize: 30,
-    fontWeight: '900',
-    marginTop: 3,
-  },
-
-  estimatedTime: {
-    color: '#818A94',
-    fontSize: 12,
-    marginTop: 10,
-    textAlign: 'right',
-  },
-
-  acceptButton: {
-    height: 56,
-    borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FF6A00',
-    marginTop: 17,
+    minHeight: 60,
   },
-
-  acceptButtonText: {
-    color: '#FFFFFF',
+  navItemActive: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 60,
+    backgroundColor: '#1B241F',
+    borderRadius: 14,
+  },
+  navIcon: {
+    color: '#9AA3AC',
     fontSize: 15,
     fontWeight: '900',
-    letterSpacing: 0.8,
+    marginBottom: 4,
+  },
+  navIconActive: {
+    color: '#52E28A',
+    fontSize: 16,
+    fontWeight: '900',
+    marginBottom: 4,
+  },
+  navText: {
+    color: '#AAB1B8',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  navTextActive: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '900',
   },
 });
-

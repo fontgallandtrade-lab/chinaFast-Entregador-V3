@@ -1,11 +1,14 @@
 import React, {
   useCallback,
+  useEffect,
+  useRef,
   useState,
 } from 'react';
 
 import {
   ActivityIndicator,
   Alert,
+  AppState,
   Linking,
   StyleSheet,
   Text,
@@ -74,6 +77,12 @@ export default function PickupScreen({
   const [updating, setUpdating] =
     useState(false);
 
+  const navigationOpenedRef =
+    useRef(false);
+
+  const appStateRef =
+    useRef(AppState.currentState);
+
   const loadDelivery = useCallback(
     async () => {
       try {
@@ -104,6 +113,55 @@ export default function PickupScreen({
       loadDelivery();
     }, [loadDelivery]),
   );
+
+  useEffect(() => {
+    const subscription =
+      AppState.addEventListener(
+        'change',
+        nextState => {
+          const previousState =
+            appStateRef.current;
+
+          appStateRef.current =
+            nextState;
+
+          const returnedToApp =
+            (
+              previousState === 'background' ||
+              previousState === 'inactive'
+            ) &&
+            nextState === 'active';
+
+          if (
+            returnedToApp &&
+            navigationOpenedRef.current
+          ) {
+            navigationOpenedRef.current = false;
+
+            setTimeout(() => {
+              Alert.alert(
+                'Chegou à coleta?',
+                'Se você já está no local, confirme sua chegada para continuar.',
+                [
+                  {
+                    text: 'Ainda não',
+                    style: 'cancel',
+                  },
+                  {
+                    text: 'CHEGUEI',
+                    onPress: arrivedAtPickup,
+                  },
+                ],
+              );
+            }, 400);
+          }
+        },
+      );
+
+    return () => {
+      subscription.remove();
+    };
+  });
 
   async function beginPickupRoute() {
     if (!delivery || updating) {
@@ -169,28 +227,49 @@ export default function PickupScreen({
     }
   }
 
-  function openPickupRoute() {
-    if (!delivery) {
+  async function openPickupRoute() {
+    if (!delivery || updating) {
       return;
     }
 
-    const hasCoordinates =
-      delivery.pickup_latitude !== null &&
-      delivery.pickup_latitude !== undefined &&
-      delivery.pickup_longitude !== null &&
-      delivery.pickup_longitude !== undefined;
+    try {
+      if (delivery.status === 'accepted') {
+        setUpdating(true);
 
-    const destination = hasCoordinates
-      ? `${delivery.pickup_latitude},${delivery.pickup_longitude}`
-      : [
-          delivery.pickup_street,
-          delivery.pickup_number,
-          delivery.pickup_neighborhood,
-          delivery.pickup_city,
-          delivery.pickup_state,
-        ]
-          .filter(Boolean)
-          .join(', ');
+        await deliveryService.updateStatus(
+          orderId,
+          'driver_going_to_pickup',
+        );
+
+        await loadDelivery();
+      }
+
+      navigationOpenedRef.current = true;
+    } catch (error) {
+      navigationOpenedRef.current = false;
+
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Não foi possível iniciar a rota.';
+
+      Alert.alert('Erro', message);
+      setUpdating(false);
+      return;
+    } finally {
+      setUpdating(false);
+    }
+
+    const destination = [
+      delivery.pickup_street,
+      delivery.pickup_number,
+      delivery.pickup_neighborhood,
+      delivery.pickup_city,
+      delivery.pickup_state,
+      'Brasil',
+    ]
+      .filter(Boolean)
+      .join(', ');
 
     const encodedDestination =
       encodeURIComponent(destination);
