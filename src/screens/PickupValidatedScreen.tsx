@@ -5,6 +5,7 @@ import React, {
 
 import {
   ActivityIndicator,
+  Linking,
   SafeAreaView,
   StatusBar,
   StyleSheet,
@@ -75,8 +76,36 @@ export default function PickupValidatedScreen({
       );
     }
 
+    const hasCoordinates =
+      delivery?.destination_latitude !== null &&
+      delivery?.destination_latitude !== undefined &&
+      delivery?.destination_longitude !== null &&
+      delivery?.destination_longitude !== undefined;
+
+    const destination = hasCoordinates
+      ? `${delivery?.destination_latitude},${delivery?.destination_longitude}`
+      : [
+          delivery?.destination_street,
+          delivery?.destination_number,
+          delivery?.destination_neighborhood,
+          delivery?.destination_city,
+          delivery?.destination_state,
+          'Brasil',
+        ]
+          .filter(Boolean)
+          .join(', ');
+
+    const mapsUrl =
+      `https://www.google.com/maps/dir/?api=1` +
+      `&destination=${encodeURIComponent(destination)}` +
+      `&travelmode=driving`;
+
     navigation.replace('Delivery', {
       orderId,
+    });
+
+    Linking.openURL(mapsUrl).catch(() => {
+      console.log('[maps] Não foi possível abrir a rota de entrega.');
     });
   }
 

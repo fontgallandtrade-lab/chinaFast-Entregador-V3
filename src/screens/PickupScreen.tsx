@@ -115,6 +115,26 @@ export default function PickupScreen({
   );
 
   useEffect(() => {
+    if (!delivery) {
+      return;
+    }
+
+    if (
+      delivery.status !== 'accepted'
+    ) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      void openPickupRoute();
+    }, 600);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [delivery?.id, delivery?.status]);
+
+  useEffect(() => {
     const subscription =
       AppState.addEventListener(
         'change',
