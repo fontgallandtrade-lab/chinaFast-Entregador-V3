@@ -43,6 +43,17 @@ async function accept(
   );
 }
 
+async function reject(
+  deliveryId: number,
+): Promise<StatusResponse> {
+  return apiRequest<StatusResponse>(
+    `/driver/deliveries/${deliveryId}/reject`,
+    {
+      method: 'POST',
+    },
+  );
+}
+
 async function getMine(): Promise<Delivery[]> {
   const response =
     await apiRequest<MyDeliveriesResponse>(
@@ -127,6 +138,7 @@ async function confirmDelivery(
 export const deliveryService = {
   getAvailable,
   accept,
+  reject,
   getMine,
   getById,
   updateStatus,

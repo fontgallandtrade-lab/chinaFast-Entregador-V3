@@ -6,6 +6,7 @@ import React, {
 
 import {
   ActivityIndicator,
+  Alert,
   RefreshControl,
   SafeAreaView,
   ScrollView,
@@ -31,6 +32,7 @@ import {
 import { authService } from '../services/auth';
 import { deliveryService } from '../services/delivery';
 import { pushService } from '../services/push';
+import { routeAlertSound } from '../services/routeAlertSound';
 import { walletService } from '../services/wallet';
 
 import {
@@ -376,6 +378,74 @@ export default function HomeScreen({
       loadDeliveries(false);
     }
 
+    async function handleNewDeliveryOffer(
+      payload: {
+        deliveryId?: number;
+      },
+    ) {
+      const deliveryId =
+        Number(payload?.deliveryId);
+
+      console.log(
+        '[socket] Nova rota disponível:',
+        deliveryId,
+      );
+
+      if (!Number.isFinite(deliveryId)) {
+        console.log(
+          '[socket] Evento new-delivery sem deliveryId válido.',
+        );
+
+        await loadDeliveries(false);
+        return;
+      }
+
+      void routeAlertSound.start();
+
+      try {
+        const available =
+          await deliveryService.getAvailable();
+
+        setDeliveries(available);
+
+        const newDelivery =
+          available.find(
+            item =>
+              Number(item.id) ===
+              deliveryId,
+          );
+
+        if (!newDelivery) {
+          console.log(
+            '[socket] Corrida recebida não está disponível para este entregador:',
+            deliveryId,
+          );
+
+          await routeAlertSound.stop();
+          return;
+        }
+
+        console.log(
+          '[socket] Abrindo corrida:',
+          deliveryId,
+        );
+
+        navigation.navigate('Order', {
+          delivery: newDelivery,
+        });
+      } catch (error) {
+        console.log(
+          '[socket] Erro ao abrir nova rota:',
+          error instanceof Error
+            ? error.message
+            : error,
+        );
+
+        await routeAlertSound.stop();
+        await loadDeliveries(false);
+      }
+    }
+
     async function connectSocket() {
       try {
         const socket =
@@ -400,8 +470,8 @@ export default function HomeScreen({
         });
 
         socket.on(
-          'delivery-offer-created',
-          refreshAvailableDeliveries,
+          'new-delivery',
+          handleNewDeliveryOffer,
         );
 
         socket.on(
@@ -429,8 +499,8 @@ export default function HomeScreen({
       activeSocket?.off('disconnect');
 
       activeSocket?.off(
-        'delivery-offer-created',
-        refreshAvailableDeliveries,
+        'new-delivery',
+        handleNewDeliveryOffer,
       );
 
       activeSocket?.off(
@@ -468,6 +538,54 @@ export default function HomeScreen({
     if (!value) {
       setDeliveries([]);
     }
+  }
+
+  function handleReject(
+    delivery: Delivery,
+  ) {
+    Alert.alert(
+      'Rejeitar corrida',
+      'Tem certeza que deseja rejeitar esta corrida?',
+      [
+        {
+          text: 'CANCELAR',
+          style: 'cancel',
+        },
+        {
+          text: 'REJEITAR',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deliveryService.reject(
+                Number(delivery.id),
+              );
+
+              await routeAlertSound.stop();
+
+              setDeliveries(current =>
+                current.filter(
+                  item =>
+                    Number(item.id) !==
+                    Number(delivery.id),
+                ),
+              );
+            } catch (rejectError) {
+              const message =
+                rejectError instanceof Error
+                  ? rejectError.message
+                  : 'Não foi possível rejeitar a corrida.';
+
+              Alert.alert(
+                'Erro',
+                message,
+              );
+
+              await loadDeliveries(false);
+            }
+          },
+        },
+      ],
+    );
   }
 
   function openOrder(
@@ -623,9 +741,27 @@ export default function HomeScreen({
                     <Text style={styles.paymentLabel}>SEU GANHO</Text>
                     <Text style={styles.paymentValue}>{formatCurrency(delivery.driver_amount)}</Text>
                   </View>
-                  <TouchableOpacity activeOpacity={0.85} style={styles.acceptButton} onPress={() => openOrder(delivery)}>
-                    <Text style={styles.acceptButtonText}>VER PEDIDO</Text>
-                  </TouchableOpacity>
+                  <View style={styles.orderActions}>
+                    <TouchableOpacity
+                      activeOpacity={0.85}
+                      style={styles.rejectButton}
+                      onPress={() => handleReject(delivery)}
+                    >
+                      <Text style={styles.rejectButtonText}>
+                        REJEITAR
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      activeOpacity={0.85}
+                      style={styles.acceptButton}
+                      onPress={() => openOrder(delivery)}
+                    >
+                      <Text style={styles.acceptButtonText}>
+                        VER PEDIDO
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             );
@@ -773,8 +909,11 @@ const styles = StyleSheet.create({
   earningRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#10251A', borderColor: '#245A39', borderWidth: 1, borderRadius: 16, padding: 14, marginTop: 13 },
   paymentLabel: { color: '#70A982', fontSize: 9, fontWeight: '900', letterSpacing: 0.7 },
   paymentValue: { color: '#52E28A', fontSize: 25, fontWeight: '900', marginTop: 2 },
-  acceptButton: { height: 43, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FF6A00', paddingHorizontal: 16, marginLeft: 10 },
-  acceptButtonText: { color: '#FFFFFF', fontSize: 11, fontWeight: '900', letterSpacing: 0.5 },
+  orderActions: { flexDirection: 'row', alignItems: 'center', marginLeft: 10 },
+  rejectButton: { height: 43, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: '#35181A', borderWidth: 1, borderColor: '#A83A40', paddingHorizontal: 12 },
+  rejectButtonText: { color: '#FF7D82', fontSize: 10, fontWeight: '900', letterSpacing: 0.4 },
+  acceptButton: { height: 43, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FF6A00', paddingHorizontal: 14, marginLeft: 7 },
+  acceptButtonText: { color: '#FFFFFF', fontSize: 10, fontWeight: '900', letterSpacing: 0.4 },
 
   blockTitle: { color: '#7F8993', fontSize: 10, fontWeight: '900', letterSpacing: 1.2, marginTop: 8, marginBottom: 9 },
   todayCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#15191E', borderWidth: 1, borderColor: '#292F36', borderRadius: 18, padding: 15, marginBottom: 12 },

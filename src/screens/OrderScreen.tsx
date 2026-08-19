@@ -1,10 +1,14 @@
 import React, {
+  useEffect,
+  useRef,
   useState,
 } from 'react';
 
 import {
   ActivityIndicator,
   Alert,
+  Animated,
+  PanResponder,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -24,6 +28,14 @@ import {
 import {
   authService,
 } from '../services/auth';
+
+import {
+  routeAlertSound,
+} from '../services/routeAlertSound';
+
+import {
+  getSocket,
+} from '../services/socket';
 
 import {
   startDriverLocationTracking,
@@ -101,9 +113,96 @@ export default function OrderScreen({
   const [accepting, setAccepting] =
     useState(false);
 
+  const [rejecting, setRejecting] =
+    useState(false);
+
+  const acceptingRef = useRef(false);
+
+  const rejectSlideX = useRef(
+    new Animated.Value(0),
+  ).current;
+
+  const acceptSlideX = useRef(
+    new Animated.Value(0),
+  ).current;
+
+  const ACCEPT_SLIDE_MAX = 245;
+
   const isIntercity =
     delivery.delivery_type ===
     'intercity';
+
+  useEffect(() => {
+    const socket = getSocket();
+
+    async function handleDeliveryStatusUpdated(
+      payload: {
+        deliveryId?: number;
+        status?: string;
+        driverId?: number;
+      },
+    ) {
+      const updatedDeliveryId =
+        Number(payload?.deliveryId);
+
+      if (
+        updatedDeliveryId !==
+        Number(delivery.id)
+      ) {
+        return;
+      }
+
+      if (
+        payload?.status !== 'accepted'
+      ) {
+        return;
+      }
+
+      // Se este aparelho acabou de aceitar,
+      // não fechar a própria tela.
+      if (acceptingRef.current) {
+        return;
+      }
+
+      console.log(
+        '[order] Corrida aceita por outro entregador:',
+        updatedDeliveryId,
+      );
+
+      await routeAlertSound.stop();
+
+      Alert.alert(
+        'Corrida indisponível',
+        'Outro entregador aceitou esta corrida primeiro.',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              navigation.goBack();
+            },
+          },
+        ],
+        {
+          cancelable: false,
+        },
+      );
+    }
+
+    socket.on(
+      'delivery-status-updated',
+      handleDeliveryStatusUpdated,
+    );
+
+    return () => {
+      socket.off(
+        'delivery-status-updated',
+        handleDeliveryStatusUpdated,
+      );
+    };
+  }, [
+    delivery.id,
+    navigation,
+  ]);
 
   async function handleAccept() {
     if (accepting) {
@@ -111,11 +210,14 @@ export default function OrderScreen({
     }
 
     try {
+      acceptingRef.current = true;
       setAccepting(true);
 
       await deliveryService.accept(
         delivery.id,
       );
+
+      await routeAlertSound.stop();
 
       const session =
         await authService.getSession();
@@ -154,6 +256,8 @@ export default function OrderScreen({
         orderId: delivery.id,
       });
     } catch (error) {
+      acceptingRef.current = false;
+
       const message =
         error instanceof Error
           ? error.message
@@ -167,6 +271,179 @@ export default function OrderScreen({
       setAccepting(false);
     }
   }
+
+  async function handleReject() {
+    if (accepting || rejecting) {
+      return;
+    }
+
+    try {
+      setRejecting(true);
+
+      await deliveryService.reject(
+        delivery.id,
+      );
+
+      await routeAlertSound.stop();
+
+      navigation.goBack();
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Não foi possível rejeitar a corrida.';
+
+      Alert.alert(
+        'Corrida não rejeitada',
+        message,
+      );
+
+      rejectSlideX.setValue(0);
+    } finally {
+      setRejecting(false);
+    }
+  }
+
+  const acceptPanResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () =>
+        !accepting,
+
+      onMoveShouldSetPanResponder: (
+        _,
+        gestureState,
+      ) =>
+        !accepting &&
+        Math.abs(gestureState.dx) > 4,
+
+      onPanResponderMove: (
+        _,
+        gestureState,
+      ) => {
+        const nextX = Math.max(
+          0,
+          Math.min(
+            gestureState.dx,
+            ACCEPT_SLIDE_MAX,
+          ),
+        );
+
+        acceptSlideX.setValue(nextX);
+      },
+
+      onPanResponderRelease: (
+        _,
+        gestureState,
+      ) => {
+        if (
+          gestureState.dx >=
+          ACCEPT_SLIDE_MAX * 0.72
+        ) {
+          Animated.timing(
+            acceptSlideX,
+            {
+              toValue: ACCEPT_SLIDE_MAX,
+              duration: 160,
+              useNativeDriver: true,
+            },
+          ).start(() => {
+            void handleAccept();
+          });
+
+          return;
+        }
+
+        Animated.spring(
+          acceptSlideX,
+          {
+            toValue: 0,
+            useNativeDriver: true,
+          },
+        ).start();
+      },
+
+      onPanResponderTerminate: () => {
+        Animated.spring(
+          acceptSlideX,
+          {
+            toValue: 0,
+            useNativeDriver: true,
+          },
+        ).start();
+      },
+    }),
+  ).current;
+
+  const rejectPanResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () =>
+        !accepting && !rejecting,
+
+      onMoveShouldSetPanResponder: (
+        _,
+        gestureState,
+      ) =>
+        !accepting &&
+        !rejecting &&
+        Math.abs(gestureState.dx) > 4,
+
+      onPanResponderMove: (
+        _,
+        gestureState,
+      ) => {
+        const nextX = Math.min(
+          0,
+          Math.max(
+            gestureState.dx,
+            -ACCEPT_SLIDE_MAX,
+          ),
+        );
+
+        rejectSlideX.setValue(nextX);
+      },
+
+      onPanResponderRelease: (
+        _,
+        gestureState,
+      ) => {
+        if (
+          gestureState.dx <=
+          -(ACCEPT_SLIDE_MAX * 0.72)
+        ) {
+          Animated.timing(
+            rejectSlideX,
+            {
+              toValue: -ACCEPT_SLIDE_MAX,
+              duration: 160,
+              useNativeDriver: true,
+            },
+          ).start(() => {
+            void handleReject();
+          });
+
+          return;
+        }
+
+        Animated.spring(
+          rejectSlideX,
+          {
+            toValue: 0,
+            useNativeDriver: true,
+          },
+        ).start();
+      },
+
+      onPanResponderTerminate: () => {
+        Animated.spring(
+          rejectSlideX,
+          {
+            toValue: 0,
+            useNativeDriver: true,
+          },
+        ).start();
+      },
+    }),
+  ).current;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -333,43 +610,91 @@ export default function OrderScreen({
           </Text>
         ) : null}
 
-        <TouchableOpacity
-          activeOpacity={0.85}
+        <View
           style={[
-            styles.acceptButton,
+            styles.acceptSlider,
             accepting &&
               styles.acceptButtonDisabled,
           ]}
-          onPress={handleAccept}
-          disabled={accepting}
         >
-          {accepting ? (
-            <ActivityIndicator
-              color="#FFFFFF"
-            />
-          ) : (
-            <Text
-              style={styles.acceptButtonText}
-            >
-              ACEITAR ENTREGA
-            </Text>
-          )}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          activeOpacity={0.8}
-          style={styles.rejectButton}
-          onPress={() =>
-            navigation.goBack()
-          }
-          disabled={accepting}
-        >
-          <Text
-            style={styles.rejectButtonText}
-          >
-            RECUSAR
+          <Text style={styles.acceptSliderText}>
+            {accepting
+              ? 'ACEITANDO...'
+              : 'DESLIZE PARA ACEITAR'}
           </Text>
-        </TouchableOpacity>
+
+          <Animated.View
+            {...acceptPanResponder.panHandlers}
+            style={[
+              styles.acceptSliderHandle,
+              {
+                transform: [
+                  {
+                    translateX:
+                      acceptSlideX,
+                  },
+                ],
+              },
+            ]}
+          >
+            {accepting ? (
+              <ActivityIndicator
+                color="#188642"
+              />
+            ) : (
+              <Text
+                style={
+                  styles.acceptSliderArrow
+                }
+              >
+                ››
+              </Text>
+            )}
+          </Animated.View>
+        </View>
+
+        <View
+          style={[
+            styles.rejectSlider,
+            (accepting || rejecting) &&
+              styles.acceptButtonDisabled,
+          ]}
+        >
+          <Text style={styles.rejectSliderText}>
+            {rejecting
+              ? 'REJEITANDO...'
+              : 'DESLIZE PARA REJEITAR'}
+          </Text>
+
+          <Animated.View
+            {...rejectPanResponder.panHandlers}
+            style={[
+              styles.rejectSliderHandle,
+              {
+                transform: [
+                  {
+                    translateX:
+                      rejectSlideX,
+                  },
+                ],
+              },
+            ]}
+          >
+            {rejecting ? (
+              <ActivityIndicator
+                color="#C53A40"
+              />
+            ) : (
+              <Text
+                style={
+                  styles.rejectSliderArrow
+                }
+              >
+                ‹‹
+              </Text>
+            )}
+          </Animated.View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -541,6 +866,42 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
+  acceptSlider: {
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: '#10B981',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    marginTop: 24,
+    paddingHorizontal: 6,
+  },
+
+  acceptSliderText: {
+    position: 'absolute',
+    alignSelf: 'center',
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '900',
+    letterSpacing: 0.4,
+  },
+
+  acceptSliderHandle: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 4,
+  },
+
+  acceptSliderArrow: {
+    color: '#10B981',
+    fontSize: 28,
+    fontWeight: '900',
+    marginTop: -3,
+  },
+
   acceptButton: {
     height: 58,
     borderRadius: 16,
@@ -558,6 +919,43 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '900',
+  },
+
+  rejectSlider: {
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: '#C53A40',
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+    overflow: 'hidden',
+    marginTop: 12,
+    paddingHorizontal: 6,
+  },
+
+  rejectSliderText: {
+    position: 'absolute',
+    alignSelf: 'center',
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '900',
+    letterSpacing: 0.3,
+  },
+
+  rejectSliderHandle: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 4,
+  },
+
+  rejectSliderArrow: {
+    color: '#C53A40',
+    fontSize: 28,
+    fontWeight: '900',
+    marginTop: -3,
   },
 
   rejectButton: {

@@ -30,7 +30,9 @@
           "color": "#FF6A00",
           "defaultChannel": "novas-corridas"
         }
-      ]
+      ],
+      "expo-audio",
+      "expo-asset"
     ],
     "extra": {
       "eas": {
