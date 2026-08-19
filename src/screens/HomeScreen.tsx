@@ -657,115 +657,102 @@ export default function HomeScreen({
 
         <View style={styles.sectionHeader}>
           <View>
-            <Text style={styles.sectionEyebrow}>TRABALHO</Text>
-            <Text style={styles.sectionTitle}>Corridas disponíveis</Text>
+            <Text style={styles.sectionEyebrow}>
+              TRABALHO
+            </Text>
+
+            <Text style={styles.sectionTitle}>
+              {isOnline
+                ? 'Aguardando corridas'
+                : 'Você está offline'}
+            </Text>
           </View>
-          {isOnline && (
-            <View style={styles.totalBadge}>
-              <Text style={styles.totalText}>{deliveries.length}</Text>
-            </View>
-          )}
         </View>
 
         {!isOnline ? (
           <View style={styles.emptyCard}>
-            <Text style={styles.emptyTitle}>Você está offline</Text>
-            <Text style={styles.emptyText}>Ative seu status para receber novas corridas.</Text>
+            <Text style={styles.emptyIcon}>○</Text>
+
+            <Text style={styles.emptyTitle}>
+              Você está offline
+            </Text>
+
+            <Text style={styles.emptyText}>
+              Ative seu status para receber novas corridas.
+            </Text>
           </View>
         ) : loading ? (
           <View style={styles.loadingCard}>
-            <ActivityIndicator size="large" color="#FF6A00" />
-            <Text style={styles.loadingText}>Buscando corridas...</Text>
+            <ActivityIndicator
+              size="large"
+              color="#F2C500"
+            />
+
+            <Text style={styles.loadingText}>
+              Conectando ao sistema...
+            </Text>
           </View>
         ) : error ? (
           <View style={styles.errorCard}>
-            <Text style={styles.errorTitle}>Não foi possível atualizar</Text>
-            <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity activeOpacity={0.85} style={styles.retryButton} onPress={() => loadDeliveries(true)}>
-              <Text style={styles.retryButtonText}>TENTAR NOVAMENTE</Text>
+            <Text style={styles.errorTitle}>
+              Não foi possível atualizar
+            </Text>
+
+            <Text style={styles.errorText}>
+              {error}
+            </Text>
+
+            <TouchableOpacity
+              activeOpacity={0.85}
+              style={styles.retryButton}
+              onPress={() =>
+                loadDeliveries(true)
+              }
+            >
+              <Text style={styles.retryButtonText}>
+                TENTAR NOVAMENTE
+              </Text>
             </TouchableOpacity>
           </View>
-        ) : deliveries.length === 0 ? (
-          <View style={styles.emptyCard}>
-            <Text style={styles.emptyIcon}>✓</Text>
-            <Text style={styles.emptyTitle}>Nenhuma corrida disponível</Text>
-            <Text style={styles.emptyText}>Continue online. Novas solicitações aparecerão automaticamente.</Text>
-          </View>
         ) : (
-          deliveries.map((delivery) => {
-            const isIntercity = delivery.delivery_type === 'intercity';
-            return (
-              <View key={delivery.id} style={styles.orderCard}>
-                <View style={styles.orderTop}>
-                  <View style={[styles.orderBadge, isIntercity ? styles.intercityBadge : styles.urbanBadge]}>
-                    <Text style={styles.orderBadgeText}>{isIntercity ? 'INTERMUNICIPAL' : 'URBANA'}</Text>
-                  </View>
-                  <Text style={styles.orderNumber}>{delivery.public_code || `Pedido #${delivery.id}`}</Text>
-                </View>
+          <View style={styles.emptyCard}>
+            <Text
+              style={[
+                styles.emptyIcon,
+                {
+                  fontSize: 34,
+                  color: '#52E28A',
+                },
+              ]}
+            >
+              ●
+            </Text>
 
-                <View style={styles.routeContainer}>
-                  <View style={styles.routeIcons}>
-                    <View style={styles.pickupDot} />
-                    <View style={styles.routeLine} />
-                    <View style={styles.deliveryDot} />
-                  </View>
-                  <View style={styles.routeTextContainer}>
-                    <View style={styles.routeBlock}>
-                      <Text style={styles.routeLabel}>RETIRADA</Text>
-                      <Text style={styles.routeName}>{delivery.pickup_city}</Text>
-                      <Text style={styles.routeAddress}>{formatAddress(delivery.pickup_street, delivery.pickup_number, delivery.pickup_neighborhood)}</Text>
-                    </View>
-                    <View style={styles.routeBlock}>
-                      <Text style={styles.routeLabel}>ENTREGA</Text>
-                      <Text style={styles.routeName}>{delivery.destination_city}</Text>
-                      <Text style={styles.routeAddress}>{formatAddress(delivery.destination_street, delivery.destination_number, delivery.destination_neighborhood)}</Text>
-                    </View>
-                  </View>
-                </View>
+            <Text style={styles.emptyTitle}>
+              Aguardando chamadas...
+            </Text>
 
-                <View style={styles.tripFooter}>
-                  <View>
-                    <Text style={styles.tripMetaLabel}>DISTÂNCIA</Text>
-                    <Text style={styles.tripMetaValue}>{formatDistance(delivery.distance_total_km)}</Text>
-                  </View>
-                  {delivery.estimated_duration_minutes ? (
-                    <View style={styles.tripMetaRight}>
-                      <Text style={styles.tripMetaLabel}>ESTIMATIVA</Text>
-                      <Text style={styles.tripMetaValue}>{delivery.estimated_duration_minutes} min</Text>
-                    </View>
-                  ) : null}
-                </View>
+            <Text style={styles.emptyText}>
+              Quando surgir uma corrida,
+              você será avisado com som
+              e a oferta abrirá automaticamente.
+            </Text>
 
-                <View style={styles.earningRow}>
-                  <View>
-                    <Text style={styles.paymentLabel}>SEU GANHO</Text>
-                    <Text style={styles.paymentValue}>{formatCurrency(delivery.driver_amount)}</Text>
-                  </View>
-                  <View style={styles.orderActions}>
-                    <TouchableOpacity
-                      activeOpacity={0.85}
-                      style={styles.rejectButton}
-                      onPress={() => handleReject(delivery)}
-                    >
-                      <Text style={styles.rejectButtonText}>
-                        REJEITAR
-                      </Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      activeOpacity={0.85}
-                      style={styles.acceptButton}
-                      onPress={() => openOrder(delivery)}
-                    >
-                      <Text style={styles.acceptButtonText}>
-                        VER PEDIDO
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-            );
-          })
+            <Text
+              style={{
+                color: socketConnected
+                  ? '#52E28A'
+                  : '#8B949E',
+                fontSize: 11,
+                fontWeight: '800',
+                marginTop: 16,
+              }}
+            >
+              {socketConnected
+                ? '● Pronto para receber corridas'
+                : '○ Conectando ao servidor'}
+            </Text>
+          </View>
         )}
 
         <Text style={styles.blockTitle}>HOJE</Text>

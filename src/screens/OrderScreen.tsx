@@ -7,8 +7,6 @@ import React, {
 import {
   ActivityIndicator,
   Alert,
-  Animated,
-  PanResponder,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -117,16 +115,6 @@ export default function OrderScreen({
     useState(false);
 
   const acceptingRef = useRef(false);
-
-  const rejectSlideX = useRef(
-    new Animated.Value(0),
-  ).current;
-
-  const acceptSlideX = useRef(
-    new Animated.Value(0),
-  ).current;
-
-  const ACCEPT_SLIDE_MAX = 245;
 
   const isIntercity =
     delivery.delivery_type ===
@@ -298,152 +286,10 @@ export default function OrderScreen({
         message,
       );
 
-      rejectSlideX.setValue(0);
     } finally {
       setRejecting(false);
     }
   }
-
-  const acceptPanResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () =>
-        !accepting,
-
-      onMoveShouldSetPanResponder: (
-        _,
-        gestureState,
-      ) =>
-        !accepting &&
-        Math.abs(gestureState.dx) > 4,
-
-      onPanResponderMove: (
-        _,
-        gestureState,
-      ) => {
-        const nextX = Math.max(
-          0,
-          Math.min(
-            gestureState.dx,
-            ACCEPT_SLIDE_MAX,
-          ),
-        );
-
-        acceptSlideX.setValue(nextX);
-      },
-
-      onPanResponderRelease: (
-        _,
-        gestureState,
-      ) => {
-        if (
-          gestureState.dx >=
-          ACCEPT_SLIDE_MAX * 0.72
-        ) {
-          Animated.timing(
-            acceptSlideX,
-            {
-              toValue: ACCEPT_SLIDE_MAX,
-              duration: 160,
-              useNativeDriver: true,
-            },
-          ).start(() => {
-            void handleAccept();
-          });
-
-          return;
-        }
-
-        Animated.spring(
-          acceptSlideX,
-          {
-            toValue: 0,
-            useNativeDriver: true,
-          },
-        ).start();
-      },
-
-      onPanResponderTerminate: () => {
-        Animated.spring(
-          acceptSlideX,
-          {
-            toValue: 0,
-            useNativeDriver: true,
-          },
-        ).start();
-      },
-    }),
-  ).current;
-
-  const rejectPanResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () =>
-        !accepting && !rejecting,
-
-      onMoveShouldSetPanResponder: (
-        _,
-        gestureState,
-      ) =>
-        !accepting &&
-        !rejecting &&
-        Math.abs(gestureState.dx) > 4,
-
-      onPanResponderMove: (
-        _,
-        gestureState,
-      ) => {
-        const nextX = Math.min(
-          0,
-          Math.max(
-            gestureState.dx,
-            -ACCEPT_SLIDE_MAX,
-          ),
-        );
-
-        rejectSlideX.setValue(nextX);
-      },
-
-      onPanResponderRelease: (
-        _,
-        gestureState,
-      ) => {
-        if (
-          gestureState.dx <=
-          -(ACCEPT_SLIDE_MAX * 0.72)
-        ) {
-          Animated.timing(
-            rejectSlideX,
-            {
-              toValue: -ACCEPT_SLIDE_MAX,
-              duration: 160,
-              useNativeDriver: true,
-            },
-          ).start(() => {
-            void handleReject();
-          });
-
-          return;
-        }
-
-        Animated.spring(
-          rejectSlideX,
-          {
-            toValue: 0,
-            useNativeDriver: true,
-          },
-        ).start();
-      },
-
-      onPanResponderTerminate: () => {
-        Animated.spring(
-          rejectSlideX,
-          {
-            toValue: 0,
-            useNativeDriver: true,
-          },
-        ).start();
-      },
-    }),
-  ).current;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -467,8 +313,20 @@ export default function OrderScreen({
         </View>
 
         <Text style={styles.title}>
+          Nova corrida
+        </Text>
+
+        <Text
+          style={{
+            color: '#8B949E',
+            fontSize: 12,
+            marginTop: -14,
+            marginBottom: 18,
+          }}
+        >
           {delivery.public_code ||
             `Pedido #${delivery.id}`}
+          {'  '}·{' '}Recebida agora
         </Text>
 
         <View style={styles.routeCard}>
@@ -610,91 +468,98 @@ export default function OrderScreen({
           </Text>
         ) : null}
 
-        <View
-          style={[
-            styles.acceptSlider,
-            accepting &&
-              styles.acceptButtonDisabled,
-          ]}
+        <Text
+          style={{
+            color: '#8B949E',
+            fontSize: 12,
+            textAlign: 'center',
+            marginTop: 18,
+            marginBottom: 4,
+          }}
         >
-          <Text style={styles.acceptSliderText}>
-            {accepting
-              ? 'ACEITANDO...'
-              : 'DESLIZE PARA ACEITAR'}
-          </Text>
-
-          <Animated.View
-            {...acceptPanResponder.panHandlers}
-            style={[
-              styles.acceptSliderHandle,
-              {
-                transform: [
-                  {
-                    translateX:
-                      acceptSlideX,
-                  },
-                ],
-              },
-            ]}
-          >
-            {accepting ? (
-              <ActivityIndicator
-                color="#188642"
-              />
-            ) : (
-              <Text
-                style={
-                  styles.acceptSliderArrow
-                }
-              >
-                ››
-              </Text>
-            )}
-          </Animated.View>
-        </View>
+          Aceite para seguir diretamente
+          para a rota de coleta.
+        </Text>
 
         <View
-          style={[
-            styles.rejectSlider,
-            (accepting || rejecting) &&
-              styles.acceptButtonDisabled,
-          ]}
+          style={{
+            flexDirection: 'row',
+            gap: 10,
+            marginTop: 18,
+          }}
         >
-          <Text style={styles.rejectSliderText}>
-            {rejecting
-              ? 'REJEITANDO...'
-              : 'DESLIZE PARA REJEITAR'}
-          </Text>
-
-          <Animated.View
-            {...rejectPanResponder.panHandlers}
+          <TouchableOpacity
+            activeOpacity={0.85}
+            disabled={accepting || rejecting}
             style={[
-              styles.rejectSliderHandle,
+              styles.rejectButton,
               {
-                transform: [
-                  {
-                    translateX:
-                      rejectSlideX,
-                  },
-                ],
+                flex: 1,
+                height: 58,
+                borderWidth: 1,
+                borderColor: '#454B52',
+                backgroundColor: '#171A1F',
               },
+              (accepting || rejecting) &&
+                styles.acceptButtonDisabled,
             ]}
+            onPress={() => {
+              void handleReject();
+            }}
           >
             {rejecting ? (
               <ActivityIndicator
-                color="#C53A40"
+                color="#FFFFFF"
               />
             ) : (
               <Text
-                style={
-                  styles.rejectSliderArrow
-                }
+                style={{
+                  color: '#FFFFFF',
+                  fontSize: 14,
+                  fontWeight: '900',
+                }}
               >
-                ‹‹
+                RECUSAR
               </Text>
             )}
-          </Animated.View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.85}
+            disabled={accepting || rejecting}
+            style={[
+              styles.acceptButton,
+              {
+                flex: 1.45,
+                height: 58,
+                marginTop: 0,
+                backgroundColor: '#F2C500',
+              },
+              (accepting || rejecting) &&
+                styles.acceptButtonDisabled,
+            ]}
+            onPress={() => {
+              void handleAccept();
+            }}
+          >
+            {accepting ? (
+              <ActivityIndicator
+                color="#111111"
+              />
+            ) : (
+              <Text
+                style={{
+                  color: '#111111',
+                  fontSize: 16,
+                  fontWeight: '900',
+                }}
+              >
+                ACEITAR
+              </Text>
+            )}
+          </TouchableOpacity>
         </View>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -703,7 +568,7 @@ export default function OrderScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F3F5F7',
+    backgroundColor: '#090A0C',
   },
 
   content: {
@@ -734,7 +599,7 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    color: '#171717',
+    color: '#FFFFFF',
     fontSize: 26,
     fontWeight: '900',
     marginTop: 10,
@@ -742,7 +607,7 @@ const styles = StyleSheet.create({
   },
 
   routeCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#15191E',
     borderRadius: 22,
     padding: 20,
     elevation: 3,
@@ -755,14 +620,14 @@ const styles = StyleSheet.create({
   },
 
   city: {
-    color: '#202020',
+    color: '#FFFFFF',
     fontSize: 21,
     fontWeight: '900',
     marginTop: 5,
   },
 
   address: {
-    color: '#707070',
+    color: '#A1A8B0',
     fontSize: 14,
     lineHeight: 21,
     marginTop: 5,
@@ -770,12 +635,12 @@ const styles = StyleSheet.create({
 
   divider: {
     height: 1,
-    backgroundColor: '#ECECEC',
+    backgroundColor: '#30363D',
     marginVertical: 20,
   },
 
   distanceCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#15191E',
     borderRadius: 20,
     padding: 18,
     marginTop: 15,
@@ -789,25 +654,25 @@ const styles = StyleSheet.create({
   },
 
   distanceLabel: {
-    color: '#6C6C6C',
+    color: '#8B949E',
     fontSize: 14,
   },
 
   distanceValue: {
-    color: '#242424',
+    color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '900',
   },
 
   totalDistanceRow: {
     borderTopWidth: 1,
-    borderTopColor: '#ECECEC',
+    borderTopColor: '#30363D',
     marginTop: 9,
     paddingTop: 13,
   },
 
   totalDistanceLabel: {
-    color: '#242424',
+    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '900',
   },
@@ -819,41 +684,41 @@ const styles = StyleSheet.create({
   },
 
   packageCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#15191E',
     borderRadius: 20,
     padding: 18,
     marginTop: 15,
   },
 
   packageTitle: {
-    color: '#202020',
+    color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '900',
     marginBottom: 8,
   },
 
   packageText: {
-    color: '#707070',
+    color: '#A1A8B0',
     fontSize: 14,
     lineHeight: 20,
     marginTop: 3,
   },
 
   paymentCard: {
-    backgroundColor: '#EAF8EF',
+    backgroundColor: '#15191E',
     borderRadius: 20,
     padding: 22,
     marginTop: 15,
   },
 
   paymentLabel: {
-    color: '#50735B',
+    color: '#F2B900',
     fontSize: 12,
     fontWeight: '900',
   },
 
   paymentValue: {
-    color: '#188642',
+    color: '#FFFFFF',
     fontSize: 34,
     fontWeight: '900',
     marginTop: 4,
@@ -889,7 +754,7 @@ const styles = StyleSheet.create({
     width: 58,
     height: 58,
     borderRadius: 29,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#15191E',
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 4,
@@ -945,7 +810,7 @@ const styles = StyleSheet.create({
     width: 58,
     height: 58,
     borderRadius: 29,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#15191E',
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 4,
