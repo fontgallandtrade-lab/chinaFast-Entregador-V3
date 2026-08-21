@@ -61,6 +61,15 @@ export default function DeliveryScreen() {
       activeDelivery?.[`${prefix}_latitude`];
     const lng =
       activeDelivery?.[`${prefix}_longitude`];
+    const placeId =
+      activeDelivery?.[`${prefix}_google_place_id`];
+
+    if (placeId) {
+      const url =
+        `https://www.google.com/maps/dir/?api=1&destination_place_id=${placeId}`;
+      await Linking.openURL(url);
+      return;
+    }
 
     if (!lat || !lng) {
       Alert.alert(
