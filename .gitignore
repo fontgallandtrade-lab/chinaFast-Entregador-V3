@@ -45,3 +45,6 @@ app.json.backup-firebase-*
 *.backup-*
 *.backup*
 *.bak*
+
+android-backup-crash-*/
+*.backup-maps-url-*
