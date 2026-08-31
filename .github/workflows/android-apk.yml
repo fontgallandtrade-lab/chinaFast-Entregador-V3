@@ -1,4 +1,4 @@
-name: Gerar APK ChinaFast
+name: Gerar APK Taturana Express Entregador
 
 on:
   workflow_dispatch:
@@ -11,7 +11,6 @@ jobs:
   build-android:
     name: Build Android Release
     runs-on: ubuntu-latest
-
     timeout-minutes: 60
 
     steps:
@@ -30,6 +29,9 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      - name: Configurar cache do Gradle
+        uses: gradle/actions/setup-gradle@v4
+
       - name: Instalar dependências
         run: npm ci
 
@@ -42,6 +44,7 @@ jobs:
       - name: Gerar projeto Android
         env:
           EXPO_NO_GIT_STATUS: 1
+          CI: true
         run: npx expo prebuild --platform android --clean --no-install
 
       - name: Dar permissão ao Gradle
@@ -49,15 +52,18 @@ jobs:
 
       - name: Gerar APK release
         working-directory: android
-        run: ./gradlew assembleRelease --no-daemon
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
 
-      - name: Localizar APK
-        run: find android/app/build/outputs -type f -name "*.apk" -print
+      - name: Mostrar APK gerado
+        run: |
+          echo "APKs encontrados:"
+          find android/app/build/outputs -type f -name "*.apk" -print
+          ls -lh android/app/build/outputs/apk/release/ || true
 
       - name: Publicar APK
         uses: actions/upload-artifact@v4
         with:
-          name: chinafast-entregador-apk
+          name: taturanaexpress-entregador-apk
           path: android/app/build/outputs/apk/release/*.apk
           if-no-files-found: error
           retention-days: 7
