@@ -280,24 +280,40 @@ export default function PickupScreen({
       setUpdating(false);
     }
 
+    const addressDestination = [
+      delivery.pickup_street,
+      delivery.pickup_number,
+      delivery.pickup_neighborhood,
+      delivery.pickup_city,
+      delivery.pickup_state,
+      'Brasil',
+    ]
+      .filter(Boolean)
+      .join(', ');
+
+    const hasAddress =
+      Boolean(delivery.pickup_street) &&
+      Boolean(delivery.pickup_city);
+
     const hasCoordinates =
       delivery.pickup_latitude !== null &&
       delivery.pickup_latitude !== undefined &&
       delivery.pickup_longitude !== null &&
       delivery.pickup_longitude !== undefined;
 
-    const destination = hasCoordinates
-      ? `${delivery.pickup_latitude},${delivery.pickup_longitude}`
-      : [
-          delivery.pickup_street,
-          delivery.pickup_number,
-          delivery.pickup_neighborhood,
-          delivery.pickup_city,
-          delivery.pickup_state,
-          'Brasil',
-        ]
-          .filter(Boolean)
-          .join(', ');
+    const destination = hasAddress
+      ? addressDestination
+      : hasCoordinates
+        ? `${delivery.pickup_latitude},${delivery.pickup_longitude}`
+        : '';
+
+    if (!destination) {
+      Alert.alert(
+        'Endereço de coleta indisponível',
+        'Não foi possível localizar um endereço ou coordenadas válidas para esta coleta.',
+      );
+      return;
+    }
 
     const encodedDestination =
       encodeURIComponent(destination);

@@ -145,24 +145,40 @@ export default function DeliveryScreen({
       return;
     }
 
+    const addressDestination = [
+      delivery.destination_street,
+      delivery.destination_number,
+      delivery.destination_neighborhood,
+      delivery.destination_city,
+      delivery.destination_state,
+      'Brasil',
+    ]
+      .filter(Boolean)
+      .join(', ');
+
+    const hasAddress =
+      Boolean(delivery.destination_street) &&
+      Boolean(delivery.destination_city);
+
     const hasCoordinates =
       delivery.destination_latitude !== null &&
       delivery.destination_latitude !== undefined &&
       delivery.destination_longitude !== null &&
       delivery.destination_longitude !== undefined;
 
-    const destination = hasCoordinates
-      ? `${delivery.destination_latitude},${delivery.destination_longitude}`
-      : [
-          delivery.destination_street,
-          delivery.destination_number,
-          delivery.destination_neighborhood,
-          delivery.destination_city,
-          delivery.destination_state,
-          'Brasil',
-        ]
-          .filter(Boolean)
-          .join(', ');
+    const destination = hasAddress
+      ? addressDestination
+      : hasCoordinates
+        ? `${delivery.destination_latitude},${delivery.destination_longitude}`
+        : '';
+
+    if (!destination) {
+      Alert.alert(
+        'Endereço de entrega indisponível',
+        'Não foi possível localizar um endereço ou coordenadas válidas para esta entrega.',
+      );
+      return;
+    }
 
     const encodedDestination =
       encodeURIComponent(destination);
