@@ -35,24 +35,32 @@ jobs:
       - name: Instalar dependências
         run: npm ci
 
+      - name: Corrigir versões do Expo
+        run: npx expo install --fix
+
+      - name: Verificar Expo
+        run: npx expo-doctor
+
+      - name: Testar autolinking Android
+        run: npx expo-modules-autolinking resolve --platform android
+
       - name: Verificar TypeScript
         run: npx tsc --noEmit
-
-      - name: Verificar projeto Expo
-        run: npx expo-doctor
 
       - name: Gerar projeto Android
         env:
           EXPO_NO_GIT_STATUS: 1
           CI: true
-        run: npx expo prebuild --platform android --clean --no-install
+        run: npx expo prebuild --platform android --clean
 
       - name: Dar permissão ao Gradle
         run: chmod +x android/gradlew
 
       - name: Gerar APK release
         working-directory: android
-        run: ./gradlew assembleRelease --no-daemon --stacktrace
+        env:
+          CI: true
+        run: ./gradlew assembleRelease --no-daemon --stacktrace --info
 
       - name: Mostrar APK gerado
         run: |
